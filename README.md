@@ -4,9 +4,10 @@ Confidis is a key store for uncertain values from multiple disagreeing sources.
 
 ## Terms
 
-* question
-* source
-* answer
+- question: An uncertain key.
+- source: An entity, e.g. a person, who can supply answers
+- answer: An answer to a question from a source. An uncertain value.
+- comparator: A way of comparing answers. If a comparator returns `0`, that means that two answers are equal. If a comparator returns `1` or greater, than means the answers are different. If a comparator returns `0...1`, that means that the answers are in some degree of agreement.
 
 ## API
 
@@ -19,8 +20,15 @@ GET <question_id>
 # Returns { "confidence": 0.88, "answer": 123, "correctSources": Array<source_id> }
 
 ADD ANSWER <answer_content> FOR <question_id> FROM <source_id>
-```
 
+ADD COMPARATOR <question_type> <builtin_comparator | tcp://zmq_socket_addr | http://mycompareendpoint.com/compare>
+
+# Other commands
+CLEAR ALL QUESTIONS
+CLEAR ALL ANSWERS
+REMOVE ANSWER TO <question_id> FROM <source_id>
+REMOVE QUESTION <question_id>
+```
 
 # Old Stuff
 
