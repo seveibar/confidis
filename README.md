@@ -10,16 +10,15 @@ Confidis is a key store for uncertain values from multiple disagreeing sources.
 
 ## API
 
+### Simple Query API
+
 ```bash
+ADD QUESTION <question_id> <question_content> <question_type>
 
 GET <question_id>
-# Returns { "confidence": 0.88, "answer": 123 }
+# Returns { "confidence": 0.88, "answer": 123, "correctSources": Array<source_id> }
 
-ADD <question_id> <question_content>
-
-SET question_id
-# Returns { "confidence": 0.88, "answer": 123 }
-
+ADD ANSWER <answer_content> FOR <question_id> FROM <source_id>
 ```
 
 
