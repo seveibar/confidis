@@ -8,6 +8,7 @@ Confidis is a key store for uncertain values from multiple disagreeing sources.
 - source: An entity, e.g. a person, who can supply answers
 - answer: An answer to a question from a source. An uncertain value.
 - comparator: A way of comparing answers. If a comparator returns `0`, that means that two answers are equal. If a comparator returns `1` or greater, than means the answers are different. If a comparator returns `0...1`, that means that the answers are in some degree of agreement.
+- distribution: Each question is part of a distribution which is specified as a prefix in the question id in the form `<distribution_id>.*`. A distribution defines some properties about the agreement of questions, e.g., the likelihood of guessing correctly.
 
 ## API
 
@@ -28,6 +29,7 @@ CLEAR ALL QUESTIONS
 CLEAR ALL ANSWERS
 REMOVE ANSWER TO <question_id> FROM <source_id>
 REMOVE QUESTION <question_id>
+GET DISTRIBUTION STATS <distribution_id>
 ```
 
 # Old Stuff
