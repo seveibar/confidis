@@ -1,0 +1,11 @@
+SET q1 a FROM s1
+SET q1 b FROM s2
+
+SET q2 a FROM s1
+SET q2 a FROM s2
+
+SET q3 a FROM s1
+
+GET q1
+GET q2
+GET q3
