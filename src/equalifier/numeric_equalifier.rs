@@ -1,14 +1,12 @@
-use crate::equalifier::{Equalifier, Answer };
-use num::{clamp};
-
+use crate::equalifier::{Answer, Equalifier};
+use num::clamp;
 
 pub struct NumericEqualifier {
-    max_distance: f64
+    max_distance: f64,
 }
 
-
 impl NumericEqualifier {
-    fn new(max_distance: f64) -> Self {
+    pub fn new(max_distance: f64) -> Self {
         NumericEqualifier { max_distance }
     }
 }
@@ -29,8 +27,5 @@ fn numeric_distance_test() {
     let nd = NumericEqualifier::new(10.0);
     let a = Answer::new(String::from("2"), String::from("s1"));
     let b = Answer::new(String::from("8.56"), String::from("s2"));
-    assert_eq!(
-        nd.get_distance(&a, &b),
-        (8.56 - 2.0) / 10.0
-    );
+    assert_eq!(nd.get_distance(&a, &b), (8.56 - 2.0) / 10.0);
 }
