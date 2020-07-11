@@ -32,6 +32,15 @@ REMOVE QUESTION <question_id>
 GET DISTRIBUTION STATS <distribution_id>
 ```
 
+### LTM vs SimpleScore
+
+SimpleScore is a fast probabilistic algorithm that iteratively computes the confidence
+and quality of each question/source whenever something is SET. There are edges cases
+where SimpleScore is not accurate. SimpleScore is the default.
+
+A Latent Truth Model is much more accurate, but takes longer to compute. For applications
+where precise confidence and accuracy is needed LTM mode should be preferred.
+
 # Old Stuff
 
 ## API

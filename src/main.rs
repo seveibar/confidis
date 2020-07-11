@@ -1,4 +1,6 @@
 mod command;
+mod cluster;
+mod equalifier;
 mod graph;
 
 // use std::io;
@@ -6,7 +8,7 @@ use std::env;
 use std::fs;
 use command::{ Command, CommandType };
 
-fn convertToCommand(line: &str) -> Command {
+fn convert_to_command(line: &str) -> Command {
     let items: Vec<&str> = line.split_whitespace().collect();
     match items[0] {
         "SET" | "set" => {
@@ -44,7 +46,7 @@ fn main() {
 
     let lines = contents.lines().filter(|line| !line.is_empty());
 
-    let commands:Vec<Command> = lines.map(|line| convertToCommand(line)).collect();
+    let commands:Vec<Command> = lines.map(|line| convert_to_command(line)).collect();
 
     let mut g = graph::Graph::new();
 
@@ -56,6 +58,6 @@ fn main() {
 
     }
 
-    println!("{:?}", commands);
+    // println!("{:?}", commands);
 
 }
