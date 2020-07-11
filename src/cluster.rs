@@ -1,5 +1,5 @@
 use crate::command::{Command, CommandType, Answer};
-use crate::equalifier::{Equalifier, OnlyEqual};
+use crate::equalifier::{ExactEqualifier, Equalifier};
 // use crate::dbscan::cluster;
 
 pub fn equal_distance_fn(a: &Answer, b: &Answer) -> f64 {
@@ -40,7 +40,7 @@ mod tests {
                 Answer::new(String::from("a"), String::from("s1")),
                 Answer::new(String::from("b"), String::from("s2"))
             ],
-            &OnlyEqual{}
+            &ExactEqualifier{}
         );
     }
 }
