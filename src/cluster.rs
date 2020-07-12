@@ -11,7 +11,7 @@ pub fn equal_distance_fn(a: &Answer, b: &Answer) -> f64 {
 
 pub fn compute_clusters(
     answers: &Vec<Answer>,
-    equalifier: &Equalifier,
+    equalifier: &dyn Equalifier,
 ) -> Result<Vec<Vec<usize>>, String> {
     // Compute answer distances
     let N = answers.len();
@@ -62,6 +62,7 @@ pub fn compute_clusters(
     }
 
     // println!("number of clusters: {}", number_of_clusters);
+    // println!("clustered answers: {:?}", clustered_answers);
 
     Ok(clustered_answers)
 }
