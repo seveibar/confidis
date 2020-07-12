@@ -47,6 +47,7 @@ pub struct Graph {
     strength_maximum: i64,
     influence_question_strength: i64,
     answer_count: u64,
+    log_weight_factor: f64,
     equalifier: Box<dyn Equalifier>,
 }
 
@@ -61,27 +62,143 @@ impl Graph {
             strength_maximum: 100,
             influence_question_strength: 1,
             answer_count: 0,
+
+            // weight_of_question = -1. * log_{log_weight_factor}(1 - confidence)
+            // 10.0 means that 90% confidence has a weight of 1. 99% confidence has a weight of 2. 99.9% has a weight of 3.
+            log_weight_factor: 10.0,
             equalifier: Box::new(ExactEqualifier::new()),
         }
     }
+
+    // Modify connected sources to indicate whether or not they're correct or incorrect
+    fn add_question_effect(&mut self, question_name: &str) {
+        let question = self.questions.get_mut(question_name).unwrap();
+        let mut correct_answers: HashSet<u64> = HashSet::new();
+        for a in &question.correct_answers {
+            correct_answers.insert(a.hash);
+        }
+        for a in &question.answers {
+            let originally_correct_fac = if correct_answers.contains(&a.hash) {
+                1.
+            } else {
+                -0.
+            };
+            let answer_source = self.sources.get_mut(&a.source).unwrap();
+            let new_quality = (answer_source.quality * answer_source.strength
+                + question.weight * originally_correct_fac)
+                / (answer_source.strength as f64 + question.weight);
+            println!(
+                "Adjusting {}.quality  {:.2} -> {:.2}",
+                answer_source.name, answer_source.quality, new_quality
+            );
+            println!(
+                "Adjusting {}.strength {:.2} -> {:.2}",
+                answer_source.name,
+                answer_source.strength,
+                answer_source.strength + question.weight
+            );
+            answer_source.strength += question.weight;
+            answer_source.quality = new_quality;
+        }
+    }
+
+    // Revert the effect of this question on any connected sources
+    fn remove_question_effect(&mut self, question_name: &str) {
+        let question = self.questions.get_mut(question_name).unwrap();
+        let mut correct_answers: HashSet<u64> = HashSet::new();
+        for a in &question.correct_answers {
+            correct_answers.insert(a.hash);
+        }
+        for a in &question.answers {
+            let originally_correct_fac = if correct_answers.contains(&a.hash) {
+                1.
+            } else {
+                0.
+            };
+            let answer_source = self.sources.get_mut(&a.source).unwrap();
+            let new_quality = (answer_source.quality * answer_source.strength as f64
+                - question.weight * originally_correct_fac)
+                / (answer_source.strength as f64 - question.weight);
+            println!(
+                "(revert) Adjusting {}.quality  {:.2} -> {:.2}",
+                answer_source.name, answer_source.quality, new_quality
+            );
+            println!(
+                "(revert) Adjusting {}.strength {:.2} -> {:.2}",
+                answer_source.name,
+                answer_source.strength,
+                answer_source.strength - question.weight
+            );
+            answer_source.strength -= question.weight;
+            answer_source.quality = new_quality;
+        }
+    }
+
+    fn compute_question_answers(&mut self, question_name: &str) {
+        let mut question = self.questions.get_mut(question_name).unwrap();
+        let clusters: Vec<Vec<usize>> =
+            compute_clusters(&question.answers, self.equalifier.as_ref()).unwrap();
+        let mut cluster_confidences: Vec<f64> = vec![0.0; clusters.len()];
+
+        for (cluster_index, cluster_members) in clusters.iter().enumerate() {
+            let sources = &self.sources;
+            let incorrect_chance = cluster_members.iter().fold(1.0_f64, |acc, &answer_index| {
+                let answer: &Answer = &question.answers[answer_index];
+                let member_source_quality: f64 = sources[&answer.source].quality;
+                // TODO apply function to lessen effect of guessing (e.g., 50% -> ~10%, 90% -> ~90%)
+                acc * (1.0 - member_source_quality)
+            });
+            cluster_confidences[cluster_index] = 1.0 - incorrect_chance;
+        }
+
+        println!("cluster confidences: {:?}", cluster_confidences);
+
+        let correct_cluster: usize = argmaxf(&cluster_confidences);
+
+        // TODO sort by best source first
+        question.correct_answers = clusters[correct_cluster]
+            .iter()
+            .map(|answer_index| question.answers[*answer_index].clone())
+            .collect();
+        println!(
+            "Adjusting {}.confidence {:.2} -> {:.2}",
+            question.name, question.confidence, cluster_confidences[correct_cluster]
+        );
+        question.confidence = cluster_confidences[correct_cluster];
+        let new_weight = if question.correct_answers.len() > 1 {
+            // 1.0
+            -1.0 * (1.0 - question.confidence).log(self.log_weight_factor)
+        } else {
+            0.0
+        };
+        println!(
+            "Adjusting {}.weight     {:.2} -> {:.2}",
+            question.name, question.weight, new_weight
+        );
+        question.weight = new_weight;
+    }
+
     pub fn execute_command(&mut self, cmd: &Command) -> Result<String, &str> {
         match cmd.cmd {
             CommandType::Set => {
-                if !self.sources.contains_key(&cmd.source) {
+                let source_name = cmd.source.as_ref().unwrap();
+                let question_name = cmd.question.as_ref().unwrap();
+
+                if !self.sources.contains_key(source_name) {
                     self.sources.insert(
-                        cmd.source.to_string(),
+                        source_name.to_string(),
                         Source {
-                            name: cmd.source.to_string(),
+                            name: source_name.to_string(),
                             quality: self.default_source_quality,
                             strength: self.initial_source_strength,
                         },
                     );
                 }
-                if !self.questions.contains_key(&cmd.question) {
+                if !self.questions.contains_key(question_name) {
                     self.questions.insert(
-                        cmd.question.to_string(),
+                        question_name.to_string(),
                         Question {
-                            name: cmd.question.to_string(),
+                            name: question_name.to_string(),
                             correct_answers: Vec::new(),
                             confidence: 0.0,
                             weight: 0.0,
@@ -90,128 +207,22 @@ impl Graph {
                         },
                     );
                 }
-                let answer = Answer::new(cmd.answer.clone(), cmd.source.clone());
-                let mut question = self.questions.get_mut(&cmd.question).unwrap();
+                let answer = Answer::new(cmd.answer.as_ref().unwrap().clone(), source_name.clone());
 
-                // Remove effect of question
+                self.remove_question_effect(question_name);
                 {
-                    let mut correct_answers: HashSet<u64> = HashSet::new();
-                    for a in &question.correct_answers {
-                        correct_answers.insert(a.hash);
-                    }
-                    for a in &question.answers {
-                        let originally_correct_fac = if correct_answers.contains(&a.hash) {
-                            1.
-                        } else {
-                            0.
-                        };
-                        let answer_source = self.sources.get_mut(&a.source).unwrap();
-                        let new_quality = (answer_source.quality * answer_source.strength as f64
-                            - question.weight * originally_correct_fac)
-                            / (answer_source.strength as f64 - question.weight);
-                        println!(
-                            "(revert) Adjusting {}.quality {} -> {}",
-                            answer_source.name, answer_source.quality, new_quality
-                        );
-                        println!(
-                            "(revert) Adjusting {}.strength {} -> {}",
-                            answer_source.name,
-                            answer_source.strength,
-                            answer_source.strength - question.weight
-                        );
-                        answer_source.strength -= question.weight;
-                        answer_source.quality = new_quality;
-                    }
+                    let question = self.questions.get_mut(question_name).unwrap();
+                    question.answers.push(answer);
                 }
+                self.compute_question_answers(question_name);
+                self.add_question_effect(question_name);
 
-                question.answers.push(answer);
-
-                let new_source = self.sources.get(&cmd.source).unwrap();
-
-                // Modify sources to indicate whether or not they're correct or incorrect
-                let clusters: Vec<Vec<usize>> =
-                    compute_clusters(&question.answers, self.equalifier.as_ref()).unwrap();
-                let mut cluster_confidences: Vec<f64> = vec![0.0; clusters.len()];
-
-                // println!(
-                //     "previously correct sources: {:?}",
-                //     previously_correct_sources
-                // );
-                // println!("previously correct answers: {:?}", question.correct_answers);
-
-                for (cluster_index, cluster_members) in clusters.iter().enumerate() {
-                    let sources = &self.sources;
-                    let incorrect_chance =
-                        cluster_members.iter().fold(1.0_f64, |acc, &answer_index| {
-                            let answer: &Answer = &question.answers[answer_index];
-                            let member_source_quality: f64 = sources[&answer.source].quality;
-                            // TODO apply function to lessen effect of guessing (e.g., 50% -> ~10%, 90% -> ~90%)
-                            acc * (1.0 - member_source_quality)
-                        });
-                    cluster_confidences[cluster_index] = 1.0 - incorrect_chance;
-                }
-
-                println!("cluster confidences: {:?}", cluster_confidences);
-
-                let correct_cluster: usize = argmaxf(&cluster_confidences);
-
-                // TODO sort by best source first
-                question.correct_answers = clusters[correct_cluster]
-                    .iter()
-                    .map(|answer_index| question.answers[*answer_index].clone())
-                    .collect();
-                println!(
-                    "{}.confidence {} -> {}",
-                    question.name, question.confidence, cluster_confidences[correct_cluster]
-                );
-                question.confidence = cluster_confidences[correct_cluster];
-                let new_weight = if question.correct_answers.len() > 1 {
-                    1.0
-                } else {
-                    0.0
-                };
-                println!(
-                    "{}.weight {} -> {}",
-                    question.name, question.weight, new_weight
-                );
-                question.weight = new_weight;
-
-                // Add effect of question
-                {
-                    let mut correct_answers: HashSet<u64> = HashSet::new();
-                    for a in &question.correct_answers {
-                        correct_answers.insert(a.hash);
-                    }
-                    for a in &question.answers {
-                        let originally_correct_fac = if correct_answers.contains(&a.hash) {
-                            1.
-                        } else {
-                            -0.
-                        };
-                        let answer_source = self.sources.get_mut(&a.source).unwrap();
-                        let new_quality = (answer_source.quality * answer_source.strength
-                            + question.weight * originally_correct_fac)
-                            / (answer_source.strength as f64 + question.weight);
-                        println!(
-                            "Adjusting {}.quality {} -> {}",
-                            answer_source.name, answer_source.quality, new_quality
-                        );
-                        println!(
-                            "Adjusting {}.strength {} -> {}",
-                            answer_source.name,
-                            answer_source.strength,
-                            answer_source.strength + question.weight
-                        );
-                        answer_source.strength += question.weight;
-                        answer_source.quality = new_quality;
-                    }
-                }
-
-                return Ok(String::from(""));
+                Ok(String::from(""))
             }
-            CommandType::Get => {
-                // TODO recompute question answer from sources if confidence is below a threshold
-                let question: &Question = self.questions.get(&cmd.question).unwrap();
+            CommandType::GetAnswer => {
+                // TODO recompute question answer from sources
+                let question: &Question =
+                    self.questions.get(cmd.question.as_ref().unwrap()).unwrap();
                 let default_answer: Answer = Answer::new(String::from("None"), String::from(""));
                 let correct_answer = question
                     .correct_answers
@@ -220,6 +231,7 @@ impl Graph {
                     .unwrap();
                 Ok(format!("{} {}", question.confidence, correct_answer))
             }
+            _ => Err("Not implemented or invalid command"),
         }
     }
 }
@@ -242,12 +254,12 @@ fn test_graph_1() {
     SET q5 f FROM s3
     SET q6 w FROM s4
 
-    GET q1
-    GET q2
-    GET q3  
-    GET q4  
-    GET q5  
-    GET q6  
+    GET ANSWER TO q1
+    GET ANSWER TO q2
+    GET ANSWER TO q3  
+    GET ANSWER TO q4  
+    GET ANSWER TO q5  
+    GET ANSWER TO q6  
     "
     .lines()
     .filter(|l| !l.trim().is_empty())
