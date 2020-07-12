@@ -41,12 +41,9 @@ fn argmaxf(vec: &Vec<f64>) -> usize {
 pub struct Graph {
     sources: HashMap<String, Source>,
     questions: HashMap<String, Question>,
-    influence_source_confidence: f64,
     default_source_quality: f64,
     initial_source_strength: f64,
-    strength_maximum: i64,
-    influence_question_strength: i64,
-    answer_count: u64,
+    strength_maximum: f64,
     log_weight_factor: f64,
     equalifier: Box<dyn Equalifier>,
 }
@@ -54,18 +51,29 @@ pub struct Graph {
 impl Graph {
     pub fn new() -> Graph {
         Graph {
+            // All sources in system
             sources: HashMap::new(),
+
+            // All questions in graph
             questions: HashMap::new(),
-            influence_source_confidence: 0.7,
+
+            // Default probability that a source will be correct
             default_source_quality: 0.5,
+
+            // Starting strength of a source, if this is low (1.0) the initial quality will be changed
+            // easily by new data. If higher, it's easier to resist adversaries with the "start good, turn bad"
+            // attack
             initial_source_strength: 1.0,
-            strength_maximum: 100,
-            influence_question_strength: 1,
-            answer_count: 0,
+
+            // Maximum strength of a source, impacts how effected they are by more recent
+            // correct/incorrect answers
+            strength_maximum: 100.0,
 
             // weight_of_question = -1. * log_{log_weight_factor}(1 - confidence)
             // 10.0 means that 90% confidence has a weight of 1. 99% confidence has a weight of 2. 99.9% has a weight of 3.
             log_weight_factor: 10.0,
+
+            // The equality/similarity system used to compare answers
             equalifier: Box::new(ExactEqualifier::new()),
         }
     }
