@@ -42,3 +42,15 @@ causes the accurate answer's confidence to decrease. e.g.
 `new_confidence = (old_confidence * -log_10(old_confidence) - SUM(other_confidence_i * -log_10(other_confidence_i)) / SUM(all_confidence_i * -log_10(all_confidence_i)`
 
 The example above weights the confidence of the selected answer (old_confidence) against other confidences as a function of the strength of the confidence.
+
+## Know-it-all source can't be proven wrong
+
+A source can't be proven wrong if it's quality and strength greatly exceeds that of all other sources. If the source
+is constantly answering many questions, it will reduce the quality of other sources, thus securing it's strength.
+
+Reducing `strength_maximum`, e.g. `CONFIGURE strength_maximum <LOW ~10-100>` of the graph will allow other sources
+to gain quality faster and override the know-it-all.
+
+This is mostly mitigated by having a validation source that is `BELIEVE`'d.
+
+Can be mitigated by restricting what percentage of questions a know-it-all is considered for.
