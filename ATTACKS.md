@@ -5,6 +5,12 @@ the truth and confidences of the system. By understanding each type of attack an
 of our configuration or environment to different scenarios, we can tune the system to eliminate the
 attacks.
 
+## Exclusively Poor Sources
+
+In this scenario, all sources have a chance of correctness less than 50%. Confidis will easily and
+automatically handle this scenario _as long as sources are acting independently_. If there are
+exclusively poor sources and biased groups (see below), the best mitigation is to `BELIEVE` and
+insert a "validation source".
 
 ## Start Good, Turn Bad
 
