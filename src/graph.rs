@@ -232,8 +232,11 @@ impl Graph {
             }
             CommandType::GetAnswer => {
                 // TODO recompute question answer from sources
-                let question: &Question =
-                    self.questions.get(cmd.question.as_ref().unwrap()).unwrap();
+                let question_name = cmd.question.as_ref().unwrap();
+
+                self.compute_question_answers(question_name);
+
+                let question: &Question = self.questions.get(question_name).unwrap();
                 let default_answer: Answer = Answer::new(String::from("None"), String::from(""));
                 let correct_answer = question
                     .correct_answers
@@ -297,8 +300,8 @@ fn test_graph_1() {
     assert_eq!(
         outputs.join("\n"),
         "\
-> a (87.500%)
-> b (93.097%)
+> a (98.557%)
+> b (97.337%)
 > d (83.682%)
 > e (45.792%)
 > f (83.682%)
