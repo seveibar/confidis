@@ -6,6 +6,7 @@ pub enum VecDistAlgo {
     L2Norm,
     L1Norm,
     PercentNotEqual,
+    IntersectionOverUnion,
 }
 
 pub struct NumericVecEqualifier {
@@ -50,6 +51,15 @@ impl Equalifier for NumericVecEqualifier {
             VecDistAlgo::PercentNotEqual => normalize(
                 (0..av.len()).filter(|&i| av[i] != bv[i]).count() as f64 / (av.len() as f64),
             ),
+            VecDistAlgo::IntersectionOverUnion => {
+                let union = (0..av.len())
+                    .filter(|&i| av[i] != 0. || bv[i] != 0.)
+                    .count() as f64;
+                let intersection = (0..av.len())
+                    .filter(|&i| av[i] == bv[i] && av[i] != 0.)
+                    .count() as f64;
+                normalize(1. - intersection / union)
+            }
         }
     }
     fn is_valid_answer(&self, a: &Answer) -> bool {
@@ -80,4 +90,12 @@ fn numeric_vector_distance_test_percent_not_equal() {
     let a = Answer::new(String::from("1,2,3,4,5,6,7,8,9,10"), String::from("s1"));
     let b = Answer::new(String::from("1,1,3,4,5,6,7,8,9,10"), String::from("s2"));
     assert_approx_eq!(nd.get_distance(&a, &b), 0.1 / 0.25);
+}
+
+#[test]
+fn numeric_vector_distance_test_intersection_over_union() {
+    let nd = NumericVecEqualifier::new(1.0, VecDistAlgo::IntersectionOverUnion, 11);
+    let a = Answer::new(String::from("0,0,0,1,1,1,1,1,0,0,0"), String::from("s1"));
+    let b = Answer::new(String::from("0,0,0,1,1,2,2,1,0,0,0"), String::from("s2"));
+    assert_approx_eq!(nd.get_distance(&a, &b), 2.0 / 5.0);
 }

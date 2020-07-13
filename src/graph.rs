@@ -1,6 +1,7 @@
 use crate::cluster::compute_clusters;
 use crate::command::{Answer, Command, CommandResponse, CommandType};
 use crate::equalifier::{Equalifier, ExactEqualifier};
+use log::info;
 use std::collections::HashSet;
 
 use std::collections::HashMap;
@@ -24,6 +25,19 @@ pub struct Question {
     confidence: f64,
     sources: Vec<SourceId>,
     answers: Vec<Answer>,
+}
+
+impl Default for Question {
+    fn default() -> Self {
+        Question {
+            name: String::new(),
+            correct_answers: Vec::new(),
+            confidence: 0.0,
+            weight: 0.0,
+            sources: Vec::new(),
+            answers: Vec::new(),
+        }
+    }
 }
 
 fn argmaxf(vec: &Vec<f64>) -> usize {
@@ -89,23 +103,24 @@ impl Graph {
             let originally_correct_fac = if correct_answers.contains(&a.hash) {
                 1.
             } else {
-                -0.
+                0.
             };
             let answer_source = self.sources.get_mut(&a.source).unwrap();
             let new_quality = (answer_source.quality * answer_source.strength
                 + question.weight * originally_correct_fac)
                 / (answer_source.strength as f64 + question.weight);
-            println!(
+            info!(
                 "Adjusting {}.quality  {:.2} -> {:.2}",
                 answer_source.name, answer_source.quality, new_quality
             );
-            println!(
+            info!(
                 "Adjusting {}.strength {:.2} -> {:.2}",
                 answer_source.name,
                 answer_source.strength,
                 answer_source.strength + question.weight
             );
-            answer_source.strength += question.weight;
+            answer_source.strength =
+                (answer_source.strength + question.weight).min(self.strength_maximum);
             answer_source.quality = new_quality;
         }
     }
@@ -127,11 +142,11 @@ impl Graph {
             let new_quality = (answer_source.quality * answer_source.strength as f64
                 - question.weight * originally_correct_fac)
                 / (answer_source.strength as f64 - question.weight);
-            println!(
+            info!(
                 "(revert) Adjusting {}.quality  {:.2} -> {:.2}",
                 answer_source.name, answer_source.quality, new_quality
             );
-            println!(
+            info!(
                 "(revert) Adjusting {}.strength {:.2} -> {:.2}",
                 answer_source.name,
                 answer_source.strength,
@@ -159,7 +174,7 @@ impl Graph {
             cluster_confidences[cluster_index] = 1.0 - incorrect_chance;
         }
 
-        println!("cluster confidences: {:?}", cluster_confidences);
+        info!("cluster confidences: {:?}", cluster_confidences);
 
         let correct_cluster: usize = argmaxf(&cluster_confidences);
 
@@ -168,7 +183,7 @@ impl Graph {
             .iter()
             .map(|answer_index| question.answers[*answer_index].clone())
             .collect();
-        println!(
+        info!(
             "Adjusting {}.confidence {:.2} -> {:.2}",
             question.name, question.confidence, cluster_confidences[correct_cluster]
         );
@@ -179,7 +194,7 @@ impl Graph {
         } else {
             0.0
         };
-        println!(
+        info!(
             "Adjusting {}.weight     {:.2} -> {:.2}",
             question.name, question.weight, new_weight
         );
@@ -207,11 +222,7 @@ impl Graph {
                         question_name.to_string(),
                         Question {
                             name: question_name.to_string(),
-                            correct_answers: Vec::new(),
-                            confidence: 0.0,
-                            weight: 0.0,
-                            sources: Vec::new(),
-                            answers: Vec::new(),
+                            ..Default::default()
                         },
                     );
                 }
@@ -249,6 +260,14 @@ impl Graph {
                     answer: Some(correct_answer.content.clone()),
                 })
             }
+            CommandType::Configure => {
+                let config_key = cmd.config_key.as_ref().unwrap();
+                let config_val = cmd.config_val.as_ref().unwrap();
+                Ok(CommandResponse {
+                    cmd: CommandType::Configure,
+                    ..Default::default()
+                })
+            }
             _ => Err("Not implemented or invalid command"),
         }
     }
@@ -256,6 +275,7 @@ impl Graph {
 
 #[test]
 fn test_graph_1() {
+    pretty_env_logger::init();
     let commands: Vec<Command> = "\
     SET q1 a FROM s1
     SET q1 a FROM s2
@@ -289,10 +309,10 @@ fn test_graph_1() {
     let mut outputs: Vec<String> = Vec::new();
 
     for command in &commands {
-        println!("\n{}", command);
+        info!("\n{}", command);
         let output = g.execute_command(&command).unwrap();
         if output.cmd == CommandType::GetAnswer {
-            println!("> {}", output);
+            info!("> {}", output);
             outputs.push(format!("> {}", &output));
         }
     }
@@ -307,6 +327,4 @@ fn test_graph_1() {
 > f (83.682%)
 > w (16.318%)"
     );
-
-    // println!("{:?}", outputs);
 }
