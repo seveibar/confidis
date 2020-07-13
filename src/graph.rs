@@ -1,5 +1,5 @@
 use crate::cluster::compute_clusters;
-use crate::command::{Answer, Command, CommandType};
+use crate::command::{Answer, Command, CommandResponse, CommandType};
 use crate::equalifier::{Equalifier, ExactEqualifier};
 use std::collections::HashSet;
 
@@ -186,7 +186,7 @@ impl Graph {
         question.weight = new_weight;
     }
 
-    pub fn execute_command(&mut self, cmd: &Command) -> Result<String, &str> {
+    pub fn execute_command(&mut self, cmd: &Command) -> Result<CommandResponse, &str> {
         match cmd.cmd {
             CommandType::Set => {
                 let source_name = cmd.source.as_ref().unwrap();
@@ -225,7 +225,10 @@ impl Graph {
                 self.compute_question_answers(question_name);
                 self.add_question_effect(question_name);
 
-                Ok(String::from(""))
+                Ok(CommandResponse {
+                    cmd: CommandType::Set,
+                    ..Default::default()
+                })
             }
             CommandType::GetAnswer => {
                 // TODO recompute question answer from sources
@@ -237,7 +240,11 @@ impl Graph {
                     .first()
                     .or_else(|| Some(&default_answer))
                     .unwrap();
-                Ok(format!("{} {}", question.confidence, correct_answer))
+                Ok(CommandResponse {
+                    cmd: CommandType::GetAnswer,
+                    confidence: Some(question.confidence),
+                    answer: Some(correct_answer.content.clone()),
+                })
             }
             _ => Err("Not implemented or invalid command"),
         }
@@ -281,18 +288,22 @@ fn test_graph_1() {
     for command in &commands {
         println!("\n{}", command);
         let output = g.execute_command(&command).unwrap();
-        if output.len() > 1 {
+        if output.cmd == CommandType::GetAnswer {
             println!("> {}", output);
+            outputs.push(format!("> {}", &output));
         }
-        outputs.push(output);
     }
 
-    assert_eq!(outputs[0], "");
-    assert_eq!(outputs[1], "");
-    assert_eq!(outputs[2], "");
-    assert_eq!(outputs[3], "");
-    assert_eq!(outputs[4], "");
-    // assert_eq!(outputs[5], "q1 0 None");
+    assert_eq!(
+        outputs.join("\n"),
+        "\
+> a (87.500%)
+> b (93.097%)
+> d (83.682%)
+> e (45.792%)
+> f (83.682%)
+> w (16.318%)"
+    );
 
     // println!("{:?}", outputs);
 }

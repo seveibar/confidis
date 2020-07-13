@@ -1,7 +1,7 @@
 use fasthash::metro;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CommandType {
     Invalid,
     Set,
@@ -21,7 +21,6 @@ impl Default for CommandType {
 pub struct Command {
     pub cmd: CommandType,
     pub source: Option<String>,
-    pub distribution: String,
     pub question: Option<String>,
     pub answer: Option<String>,
     pub config_key: Option<String>,
@@ -64,7 +63,6 @@ impl Command {
                 Command {
                     cmd: CommandType::Set,
                     question: Some(String::from(items[1])),
-                    distribution: String::from("default"),
                     answer: Some(String::from(items[2])),
                     source: Some(String::from(items[4])),
                     ..Default::default()
@@ -76,7 +74,6 @@ impl Command {
                     Command {
                         cmd: CommandType::GetAnswer,
                         question: Some(String::from(items[3])),
-                        distribution: String::from("default"),
                         ..Default::default()
                     }
                 } else if items[1] == "SOURCE" {
@@ -84,7 +81,6 @@ impl Command {
                     Command {
                         cmd: CommandType::GetSource,
                         source: Some(String::from(items[2])),
-                        distribution: String::from("default"),
                         ..Default::default()
                     }
                 } else {
@@ -96,7 +92,6 @@ impl Command {
                 Command {
                     cmd: CommandType::Believe,
                     source: Some(String::from(items[1])),
-                    distribution: String::from("default"),
                     ..Default::default()
                 }
             }
@@ -109,7 +104,7 @@ impl Command {
                     ..Default::default()
                 }
             }
-            _ => panic!("Invalid command: {}", items[0]),
+            _ => panic!("Invalid command starting token: {}", items[0]),
         }
     }
 }
@@ -134,5 +129,27 @@ impl Answer {
 impl fmt::Display for Answer {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.content)
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct CommandResponse {
+    pub cmd: CommandType,
+    pub answer: Option<String>,
+    pub confidence: Option<f64>,
+}
+
+impl fmt::Display for CommandResponse {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.cmd == CommandType::GetAnswer {
+            write!(
+                f,
+                "{} ({:.3}%)",
+                &self.answer.as_ref().unwrap(),
+                self.confidence.unwrap() * 100.
+            )
+        } else {
+            write!(f, ">")
+        }
     }
 }
