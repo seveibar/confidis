@@ -66,4 +66,6 @@ Can be mitigated by restricting what percentage of questions a know-it-all is co
 Duplicate or dependent sources are highly correlated e.g. if two sources are copying each other. By default, confidis fails to
 recognize dependent or duplicate sources because it's computationally expensive to identify correlating sources.
 
+A future mitigation uses ["dependence mode"](https://github.com/waoai/confidis/issues/6).
+
 
