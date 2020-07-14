@@ -9,10 +9,23 @@ pub enum VecDistAlgo {
     IntersectionOverUnion,
 }
 
+impl VecDistAlgo {
+    pub fn from(s: &str) -> Option<Self> {
+        let ls = s.to_lowercase();
+        match s {
+            "l1" | "l1norm" => Some(VecDistAlgo::L1Norm),
+            "l2" | "l2norm" => Some(VecDistAlgo::L2Norm),
+            "percent_not_equal" | "percentnotequal" => Some(VecDistAlgo::PercentNotEqual),
+            "iou" | "intersectionoverunion" => Some(VecDistAlgo::IntersectionOverUnion),
+            _ => None,
+        }
+    }
+}
+
 pub struct NumericVecEqualifier {
-    allowed_difference: f64,
-    vec_length: usize,
-    diff_fn: VecDistAlgo,
+    pub allowed_difference: f64,
+    pub vec_length: usize,
+    pub diff_fn: VecDistAlgo,
 }
 
 impl NumericVecEqualifier {

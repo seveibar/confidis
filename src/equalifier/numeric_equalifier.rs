@@ -2,7 +2,7 @@ use crate::equalifier::{Answer, Equalifier};
 use num::clamp;
 
 pub struct NumericEqualifier {
-    max_distance: f64,
+    pub max_distance: f64,
 }
 
 impl NumericEqualifier {

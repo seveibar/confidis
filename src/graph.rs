@@ -1,10 +1,11 @@
 use crate::cluster::compute_clusters;
 use crate::command::{Answer, Command, CommandResponse, CommandType};
-use crate::equalifier::{Equalifier, ExactEqualifier};
+use crate::equalifier::{
+    Equalifier, ExactEqualifier, NumericEqualifier, NumericVecEqualifier, VecDistAlgo,
+};
 use log::info;
-use std::collections::HashSet;
-
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::result::Result;
 
 type SourceId = String;
@@ -201,7 +202,7 @@ impl Graph {
         question.weight = new_weight;
     }
 
-    pub fn execute_command(&mut self, cmd: &Command) -> Result<CommandResponse, &str> {
+    pub fn execute_command(&mut self, cmd: &Command) -> Result<CommandResponse, String> {
         match cmd.cmd {
             CommandType::Set => {
                 let source_name = cmd.source.as_ref().unwrap();
@@ -263,12 +264,85 @@ impl Graph {
             CommandType::Configure => {
                 let config_key = cmd.config_key.as_ref().unwrap();
                 let config_val = cmd.config_val.as_ref().unwrap();
+                let params: HashMap<&str, &str> = config_val
+                    .split_whitespace()
+                    .filter(|&s| s.contains("="))
+                    .collect::<Vec<&str>>()
+                    .iter()
+                    .fold(HashMap::new(), |mut acc, s| {
+                        let mut components = s.split("=");
+                        acc.insert(components.next().unwrap(), components.next().unwrap());
+                        acc
+                    });
+
+                match config_key.as_str() {
+                    "comparison_method" => match config_val.split_whitespace().next().unwrap() {
+                        "exact" => self.equalifier = Box::new(ExactEqualifier {}),
+                        "numeric" => {
+                            let max_distance = params
+                                .get("max_distance")
+                                .and_then(|d| d.parse::<f64>().ok());
+
+                            if !max_distance.is_some() {
+                                return Err("max_distance must be specified".into());
+                            }
+
+                            self.equalifier = Box::new(NumericEqualifier {
+                                max_distance: max_distance.unwrap(),
+                            })
+                        }
+                        "numeric_vec" => {
+                            let allowed_difference = params
+                                .get("allowed_difference")
+                                .and_then(|s| s.parse::<f64>().ok());
+
+                            let vec_length = params
+                                .get("vec_length")
+                                .and_then(|s| s.parse::<usize>().ok());
+
+                            let diff_fn: Option<VecDistAlgo> =
+                                params.get("diff_fn").and_then(|s| VecDistAlgo::from(s));
+
+                            if !allowed_difference.is_some() {
+                                return Err("allowed_difference must be specified (try 1.0)".into());
+                            }
+                            if !vec_length.is_some() {
+                                return Err(
+                                    "vec_length must be specified (vector lengths must be fixed)"
+                                        .into(),
+                                );
+                            }
+                            if !diff_fn.is_some() {
+                                return Err(
+                                    "diff_fn must be specified (l1, l2, percent_not_equal, iou)"
+                                        .into(),
+                                );
+                            }
+
+                            self.equalifier = Box::new(NumericVecEqualifier {
+                                allowed_difference: allowed_difference.unwrap(),
+                                vec_length: vec_length.unwrap(),
+                                diff_fn: diff_fn.unwrap(),
+                            })
+                        }
+                        &_ => {
+                            return Err(format!("unknown comparison method \"{}\". Try exact, numeric, or numeric_vec", config_key));
+                        }
+                    },
+                    "default_source_quality" => {
+                        self.default_source_quality = (&config_val).parse().unwrap();
+                    }
+                    &_ => {
+                        return Err(format!("Unknown configuration key: \"{}\"", config_key));
+                    }
+                }
+
                 Ok(CommandResponse {
                     cmd: CommandType::Configure,
                     ..Default::default()
                 })
             }
-            _ => Err("Not implemented or invalid command"),
+            _ => Err("Not implemented or invalid command".into()),
         }
     }
 }
