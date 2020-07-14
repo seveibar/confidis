@@ -5,6 +5,12 @@ the truth and confidences of the system. By understanding each type of attack an
 of our configuration or environment to different scenarios, we can tune the system to eliminate the
 attacks.
 
+## Exclusively Poor Sources
+
+In this scenario, all sources have a chance of correctness less than 50%. Confidis will easily and
+automatically handle this scenario _as long as sources are acting independently_. If there are
+exclusively poor sources and biased groups (see below), the best mitigation is to `BELIEVE` and
+insert a "validation source".
 
 ## Start Good, Turn Bad
 
@@ -54,3 +60,15 @@ to gain quality faster and override the know-it-all.
 This is mostly mitigated by having a validation source that is `BELIEVE`'d.
 
 Can be mitigated by restricting what percentage of questions a know-it-all is considered for.
+
+## Dependent / Duplicate Sources
+
+Duplicate or dependent sources are highly correlated e.g. if two sources are copying each other. By default, confidis fails to
+recognize dependent or duplicate sources because it's computationally expensive to identify correlating sources.
+
+A future mitigation uses ["dependence mode"](https://github.com/waoai/confidis/issues/6).
+
+A future mitigation ["confidence limited to maximum source qualities"](https://github.com/waoai/confidis/issues/2) can mitigate or eliminate
+the impact of dependent sources by counting at most 2 agreeing sources.
+
+
