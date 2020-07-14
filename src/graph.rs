@@ -58,7 +58,7 @@ pub struct Graph {
     questions: HashMap<String, Question>,
     default_source_quality: f64,
     initial_source_strength: f64,
-    strength_maximum: f64,
+    maximum_strength: f64,
     log_weight_factor: f64,
     equalifier: Box<dyn Equalifier>,
 }
@@ -82,7 +82,7 @@ impl Graph {
 
             // Maximum strength of a source, impacts how effected they are by more recent
             // correct/incorrect answers
-            strength_maximum: 100.0,
+            maximum_strength: 100.0,
 
             // weight_of_question = -1. * log_{log_weight_factor}(1 - confidence)
             // 10.0 means that 90% confidence has a weight of 1. 99% confidence has a weight of 2. 99.9% has a weight of 3.
@@ -121,7 +121,7 @@ impl Graph {
                 answer_source.strength + question.weight
             );
             answer_source.strength =
-                (answer_source.strength + question.weight).min(self.strength_maximum);
+                (answer_source.strength + question.weight).min(self.maximum_strength);
             answer_source.quality = new_quality;
         }
     }
@@ -330,7 +330,24 @@ impl Graph {
                         }
                     },
                     "default_source_quality" => {
-                        self.default_source_quality = (&config_val).parse().unwrap();
+                        if let Ok(v) = (&config_val).parse() {
+                            self.default_source_quality = v;
+                        }
+                    }
+                    "log_weight_factor" => {
+                        if let Ok(v) = (&config_val).parse() {
+                            self.log_weight_factor = v;
+                        }
+                    }
+                    "initial_source_strength" => {
+                        if let Ok(v) = (&config_val).parse() {
+                            self.initial_source_strength = v;
+                        }
+                    }
+                    "maximum_strength" => {
+                        if let Ok(v) = (&config_val).parse() {
+                            self.maximum_strength = v;
+                        }
                     }
                     &_ => {
                         return Err(format!("Unknown configuration key: \"{}\"", config_key));
