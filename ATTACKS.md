@@ -60,3 +60,10 @@ to gain quality faster and override the know-it-all.
 This is mostly mitigated by having a validation source that is `BELIEVE`'d.
 
 Can be mitigated by restricting what percentage of questions a know-it-all is considered for.
+
+## Dependent / Duplicate Sources
+
+Duplicate or dependent sources are highly correlated e.g. if two sources are copying each other. By default, confidis fails to
+recognize dependent or duplicate sources because it's computationally expensive to identify correlating sources.
+
+
