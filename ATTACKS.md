@@ -68,4 +68,7 @@ recognize dependent or duplicate sources because it's computationally expensive 
 
 A future mitigation uses ["dependence mode"](https://github.com/waoai/confidis/issues/6).
 
+A future mitigation ["confidence limited to maximum source qualities"](https://github.com/waoai/confidis/issues/2) can mitigate or eliminate
+the impact of dependent sources by counting at most 2 agreeing sources.
+
 
