@@ -243,7 +243,6 @@ impl Graph {
                 })
             }
             CommandType::GetAnswer => {
-                // TODO recompute question answer from sources
                 let question_name = cmd.question.as_ref().unwrap();
 
                 self.compute_question_answers(question_name);
