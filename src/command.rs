@@ -54,57 +54,65 @@ impl fmt::Display for Command {
 }
 
 impl Command {
-    pub fn from(line: &str) -> Command {
+    pub fn from(line: &str) -> Result<Command, String> {
         // TODO shouldn't split up quoted strings
         let items: Vec<&str> = line.split_whitespace().collect();
+        if items.len() == 0 {
+            return Err("Blank command".into());
+        }
         match items[0] {
             "SET" | "set" => {
+                if items.len() != 5 {
+                    return Err(
+                        "Missing items, syntax is SET <question> <answer> FROM <source>".into(),
+                    );
+                }
                 // SET <question> <answer> FROM <source>
-                Command {
+                Ok(Command {
                     cmd: CommandType::Set,
                     question: Some(String::from(items[1])),
                     answer: Some(String::from(items[2])),
                     source: Some(String::from(items[4])),
                     ..Default::default()
-                }
+                })
             }
             "GET" | "get" => {
                 if items[1] == "ANSWER" && items[2] == "TO" {
                     // GET ANSWER TO <question>
-                    Command {
+                    Ok(Command {
                         cmd: CommandType::GetAnswer,
                         question: Some(String::from(items[3])),
                         ..Default::default()
-                    }
+                    })
                 } else if items[1] == "SOURCE" {
                     // GET SOURCE <source>
-                    Command {
+                    Ok(Command {
                         cmd: CommandType::GetSource,
                         source: Some(String::from(items[2])),
                         ..Default::default()
-                    }
+                    })
                 } else {
-                    panic!("Invalid GET command: \"{}\"", line);
+                    Err(format!("Invalid GET command: \"{}\"", line))
                 }
             }
             "BELIEVE" | "believe" => {
                 // BELIEVE <source>
-                Command {
+                Ok(Command {
                     cmd: CommandType::Believe,
                     source: Some(String::from(items[1])),
                     ..Default::default()
-                }
+                })
             }
             "CONFIGURE" | "configure" => {
                 // CONFIGURE <key> <value>
-                Command {
+                Ok(Command {
                     cmd: CommandType::Configure,
                     config_key: Some(String::from(items[1])),
                     config_val: Some(String::from(items[2])),
                     ..Default::default()
-                }
+                })
             }
-            _ => panic!("Invalid command starting token: {}", items[0]),
+            _ => Err(format!("Invalid command starting token: {}", items[0])),
         }
     }
 }
@@ -149,7 +157,7 @@ impl fmt::Display for CommandResponse {
                 self.confidence.unwrap() * 100.
             )
         } else {
-            write!(f, ">")
+            write!(f, "")
         }
     }
 }

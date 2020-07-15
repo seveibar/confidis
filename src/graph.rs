@@ -158,7 +158,7 @@ impl Graph {
         }
     }
 
-    fn compute_question_answers(&mut self, question_name: &str) {
+    fn compute_question_answers(&mut self, question_name: &str) -> Result<(), String> {
         let mut question = self.questions.get_mut(question_name).unwrap();
         let clusters: Vec<Vec<usize>> =
             compute_clusters(&question.answers, self.equalifier.as_ref()).unwrap();
@@ -200,6 +200,7 @@ impl Graph {
             question.name, question.weight, new_weight
         );
         question.weight = new_weight;
+        Ok(())
     }
 
     pub fn execute_command(&mut self, cmd: &Command) -> Result<CommandResponse, String> {
@@ -234,7 +235,8 @@ impl Graph {
                     let question = self.questions.get_mut(question_name).unwrap();
                     question.answers.push(answer);
                 }
-                self.compute_question_answers(question_name);
+                self.compute_question_answers(question_name)
+                    .expect("error computing question answer");
                 self.add_question_effect(question_name);
 
                 Ok(CommandResponse {
@@ -245,7 +247,10 @@ impl Graph {
             CommandType::GetAnswer => {
                 let question_name = cmd.question.as_ref().unwrap();
 
-                self.compute_question_answers(question_name);
+                self.remove_question_effect(question_name);
+                self.compute_question_answers(question_name)
+                    .expect("error computing question answer");
+                self.add_question_effect(question_name);
 
                 let question: &Question = self.questions.get(question_name).unwrap();
                 let default_answer: Answer = Answer::new(String::from("None"), String::from(""));
@@ -392,6 +397,7 @@ fn test_graph_1() {
     .lines()
     .filter(|l| !l.trim().is_empty())
     .map(|l| Command::from(l.trim()))
+    .filter_map(|x| x.ok())
     .collect();
 
     let mut g = Graph::new();
@@ -410,11 +416,11 @@ fn test_graph_1() {
     assert_eq!(
         outputs.join("\n"),
         "\
-> a (98.557%)
-> b (97.337%)
-> d (83.682%)
-> e (45.792%)
-> f (83.682%)
-> w (16.318%)"
+> a (95.885%)
+> b (95.607%)
+> d (86.641%)
+> e (50.379%)
+> f (86.641%)
+> w (13.359%)"
     );
 }
