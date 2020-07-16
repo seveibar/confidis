@@ -1,3 +1,4 @@
+extern crate wasm_bindgen;
 use crate::cluster::compute_clusters;
 use crate::command::{Answer, Command, CommandResponse, CommandType};
 use crate::equalifier::{
@@ -7,6 +8,8 @@ use log::info;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::result::Result;
+
+use wasm_bindgen::prelude::*;
 
 type SourceId = String;
 type QuestionId = String;
@@ -60,6 +63,7 @@ pub struct Graph {
     initial_source_strength: f64,
     maximum_strength: f64,
     log_weight_factor: f64,
+    quality_of_believed_sources: f64,
     equalifier: Box<dyn Equalifier>,
 }
 
@@ -87,6 +91,9 @@ impl Graph {
             // weight_of_question = -1. * log_{log_weight_factor}(1 - confidence)
             // 10.0 means that 90% confidence has a weight of 1. 99% confidence has a weight of 2. 99.9% has a weight of 3.
             log_weight_factor: 10.0,
+
+            // quality of believed sources
+            quality_of_believed_sources: 0.999,
 
             // The equality/similarity system used to compare answers
             equalifier: Box::new(ExactEqualifier::new()),
