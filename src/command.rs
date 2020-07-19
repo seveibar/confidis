@@ -1,7 +1,9 @@
-use fasthash::metro;
+use serde::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub enum CommandType {
     Invalid,
     Set,
@@ -17,7 +19,7 @@ impl Default for CommandType {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Command {
     pub cmd: CommandType,
     pub source: Option<String>,
@@ -117,7 +119,7 @@ impl Command {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Answer {
     pub hash: u64,
     pub content: String,
@@ -126,8 +128,10 @@ pub struct Answer {
 
 impl Answer {
     pub fn new(content: String, source: String) -> Self {
+        let mut hasher = DefaultHasher::new();
+        content.hash(&mut hasher);
         Answer {
-            hash: metro::hash64(content.as_bytes()),
+            hash: hasher.finish(),
             content: content,
             source: source,
         }
@@ -140,7 +144,7 @@ impl fmt::Display for Answer {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct CommandResponse {
     pub cmd: CommandType,
     pub answer: Option<String>,

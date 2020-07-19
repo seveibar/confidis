@@ -1,4 +1,3 @@
-extern crate wasm_bindgen;
 use crate::cluster::compute_clusters;
 use crate::command::{Answer, Command, CommandResponse, CommandType};
 use crate::equalifier::{
@@ -8,8 +7,6 @@ use log::info;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::result::Result;
-
-use wasm_bindgen::prelude::*;
 
 type SourceId = String;
 type QuestionId = String;
