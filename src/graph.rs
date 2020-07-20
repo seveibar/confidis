@@ -172,7 +172,6 @@ impl Graph {
             let incorrect_chance = cluster_members.iter().fold(1.0_f64, |acc, &answer_index| {
                 let answer: &Answer = &question.answers[answer_index];
                 let member_source_quality: f64 = sources[&answer.source].quality;
-                // TODO apply function to lessen effect of guessing (e.g., 50% -> ~10%, 90% -> ~90%)
                 acc * (1.0 - member_source_quality)
             });
             cluster_confidences[cluster_index] = 1.0 - incorrect_chance;
@@ -266,6 +265,18 @@ impl Graph {
                     cmd: CommandType::GetAnswer,
                     confidence: Some(question.confidence),
                     answer: Some(correct_answer.content.clone()),
+                    ..Default::default()
+                })
+            }
+            CommandType::GetSource => {
+                let source_name = cmd.source.as_ref().unwrap();
+
+                let source: &Source = self.sources.get(source_name).unwrap();
+
+                Ok(CommandResponse {
+                    cmd: CommandType::GetSource,
+                    quality: Some(source.quality),
+                    ..Default::default()
                 })
             }
             CommandType::Configure => {
@@ -392,10 +403,14 @@ fn test_graph_1() {
 
     GET ANSWER TO q1
     GET ANSWER TO q2
-    GET ANSWER TO q3  
-    GET ANSWER TO q4  
-    GET ANSWER TO q5  
-    GET ANSWER TO q6  
+    GET ANSWER TO q3
+    GET ANSWER TO q4
+    GET ANSWER TO q5
+    GET ANSWER TO q6
+    GET SOURCE s1
+    GET SOURCE s2
+    GET SOURCE s3
+    GET SOURCE s4
     "
     .lines()
     .filter(|l| !l.trim().is_empty())
@@ -410,7 +425,7 @@ fn test_graph_1() {
     for command in &commands {
         info!("\n{}", command);
         let output = g.execute_command(&command).unwrap();
-        if output.cmd == CommandType::GetAnswer {
+        if output.cmd == CommandType::GetAnswer || output.cmd == CommandType::GetSource {
             info!("> {}", output);
             outputs.push(format!("> {}", &output));
         }
@@ -424,6 +439,10 @@ fn test_graph_1() {
 > d (86.641%)
 > e (50.379%)
 > f (86.641%)
-> w (13.359%)"
+> w (13.359%)
+> 0.866
+> 0.504
+> 0.866
+> 0.134"
     );
 }

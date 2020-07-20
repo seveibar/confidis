@@ -147,21 +147,22 @@ impl fmt::Display for Answer {
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct CommandResponse {
     pub cmd: CommandType,
+    pub quality: Option<f64>,
     pub answer: Option<String>,
     pub confidence: Option<f64>,
 }
 
 impl fmt::Display for CommandResponse {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.cmd == CommandType::GetAnswer {
-            write!(
+        match self.cmd {
+            CommandType::GetAnswer => write!(
                 f,
                 "{} ({:.3}%)",
                 &self.answer.as_ref().unwrap(),
                 self.confidence.unwrap() * 100.
-            )
-        } else {
-            write!(f, "")
+            ),
+            CommandType::GetSource => write!(f, "{:.3}", self.quality.unwrap()),
+            _ => write!(f, ""),
         }
     }
 }
