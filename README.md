@@ -79,13 +79,11 @@ Help wanted for this section.
 ### Simple Query API
 
 ```bash
-SET 
-ADD QUESTION <question_id> <question_content> <question_type>
+SET <question_id> <answer_content> FROM <source_id>
 
 GET ANSWER TO <question_id>
 # Returns { "confidence": 0.88, "answer": "someanswer" }
 
-ADD ANSWER <answer_content> FOR <question_id> FROM <source_id>
 
 # Other commands
 CLEAR ALL QUESTIONS
@@ -94,6 +92,8 @@ GET SOURCES FOR <question_id>
 GET BEST SOURCE FOR <question_id>
 REMOVE ANSWER TO <question_id> FROM <source_id>
 REMOVE QUESTION <question_id>
+
+ADD ANSWER <answer_content> FOR <question_id> FROM <source_id>
 
 # Configuring
 CONFIGURE <configuration_setting> <value> [some_parameter=some_parameter_value ...]
