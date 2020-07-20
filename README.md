@@ -109,10 +109,12 @@ CONFIGURE <configuration_setting> <value> [some_parameter=some_parameter_value .
 Each configuration parameter has a description in [graphs.rs](https://github.com/waoai/confidis/blob/master/src/graph.rs). Some
 recommendations for adjusting configuration to mitigate attacks can be found in [ATTACKS.md](https://github.com/waoai/confidis/blob/master/ATTACKS.md).
 
-| Setting Name                |  Default Value | Parameters |
-| --------------------------- |  ------------- | ---------- |
-| default_source_quality      |  0.5           |            |
-| log_weight_factor           |  10.0          |            |
-| initial_source_strength     |  1.0           |            |
-| quality_of_believed_sources |  0.999         |            |
-| comparison_method           |  exact         |            |
+| Setting Name                |  Default Value | Parameters                              |
+| --------------------------- |  ------------- | --------------------------------------- |
+| default_source_quality      |  0.5           |                                         |
+| log_weight_factor           |  10.0          |                                         |
+| initial_source_strength     |  1.0           |                                         |
+| quality_of_believed_sources |  0.999         |                                         |
+| comparison_method           |  exact         |                                         |
+| comparison_method           |  numeric       | max_distance                            |
+| comparison_method           |  numeric_vec   | vec_length, allowed_difference, diff_fn |
