@@ -19,7 +19,7 @@ is tuned for adverserial scenarios.
 
 ## Usage
 
-### Javascript
+### Javascript (NodeJS)
 
 `npm install confidis` / `yarn add confidis`
 
@@ -31,6 +31,10 @@ const { GraphJS } = require("confidis/node")
 GraphJS.execute_command("SET q1 a FROM s1")
 GraphJS.execute_command("GET ANSWER TO q1") // { "cmd": "GetAnswer", confidience: 0.5, answer: "a" }
 ```
+
+### Javascript (Browser)
+
+`npm install confidis` / `yarn add confidis`
 
 For browsers, make sure you're using webpack with a WebAssembly loader (for CRA users, you may need to eject). The loader goes under the "module"
 key with the other loaders and looks like this:
@@ -72,7 +76,6 @@ Help wanted for this section.
 - source: An entity, e.g. a person, who can supply answers
 - answer: An answer to a question from a source. An uncertain value.
 - comparator: A way of comparing answers. If a comparator returns `0`, that means that two answers are equal. If a comparator returns `1` or greater, than means the answers are different. If a comparator returns `0...1`, that means that the answers are in some degree of agreement.
-- distribution: Each question is part of a distribution which is specified as a prefix in the question id in the form `<distribution_id>.*`. A distribution defines some properties about the agreement of questions, e.g., the likelihood of guessing correctly.
 
 ## API
 
@@ -111,13 +114,3 @@ recommendations for adjusting configuration to mitigate attacks can be found in 
 | initial_source_strength     |  1.0           |            |
 | quality_of_believed_sources |  0.999         |            |
 | comparison_method           |  exact         |            |
-
-### LTM vs SimpleScore
-
-SimpleScore is a fast probabilistic algorithm that iteratively computes the confidence
-and quality of each question/source whenever something is SET. There are edges cases
-where SimpleScore is not accurate. SimpleScore is the default.
-
-A Latent Truth Model is much more accurate, but takes longer to compute. For applications
-where precise confidence and accuracy is needed LTM mode should be preferred. LTMs don't
-perform well on several adverserial attacks (specifically, "bad sources")
