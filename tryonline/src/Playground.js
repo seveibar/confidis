@@ -1,7 +1,11 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Box, Grid, styled, colors } from "@material-ui/core"
 import ExpandingTextArea from "react-expanding-textarea"
-import * as confidis from "confidis/web"
+
+let confidis
+import("confidis/bundler").then((c) => {
+  confidis = c
+})
 
 const defaultProgram = `
 
@@ -51,12 +55,53 @@ const TryItOut = styled(Box)({
 
 export default () => {
   const [text, setText] = useState(defaultProgram)
-  const [output, setOutput] = useState("Some output \n\n\nsome more output")
-  console.log({ confidis })
+  const [output, setOutput] = useState("Computing in WebAssembly...")
+  const [confidisLoaded, setConfidisLoaded] = useState(false)
+
+  useEffect(() => {
+    if (confidisLoaded) return
+    const interval = setInterval(() => {
+      if (confidis) {
+        setConfidisLoaded(true)
+        clearInterval(interval)
+      }
+    }, 100)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [confidisLoaded, setConfidisLoaded])
+
+  useEffect(() => {
+    if (!confidis) {
+      return
+    }
+    const g = confidis.GraphJS.new()
+    const output = []
+    for (const line of text.split("\n")) {
+      try {
+        const result = g.execute_command(line.trim())
+        if (result.cmd === "GetAnswer") {
+          output.push(
+            `${result.answer} (${(result.confidence * 100).toFixed(3)}%)`
+          )
+        } else {
+          output.push("")
+        }
+      } catch (e) {
+        if (e.toString() === "Blank command") {
+          output.push("")
+        } else {
+          output.push("Err: " + e.toString())
+        }
+      }
+    }
+    setOutput(output.join("\n"))
+  }, [text, confidisLoaded])
+
   return (
     <Container>
       <Grid container>
-        <Grid item xs={8}>
+        <Grid item xs={12}>
           <Box display="flex">
             <TryItOut>Try It Out</TryItOut>
             <Box flexGrow={1} />
@@ -77,15 +122,15 @@ export default () => {
                 right: 0,
                 border: "none",
                 backgroundColor: "transparent",
-                width: 300,
+                width: 400,
                 opacity: 0.5,
               }}
             />
           </Box>
         </Grid>
-        <Grid item xs={4}>
-          {/*  */}
-        </Grid>
+        {/* <Grid item xs={4}> */}
+        {/* PUT GRAPH HERE */}
+        {/* </Grid> */}
       </Grid>
     </Container>
   )

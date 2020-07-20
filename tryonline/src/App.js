@@ -37,7 +37,7 @@ function App() {
       <InnerContent>
         <Top>
           <Grid container>
-            <Grid xs={8} item>
+            <Grid xs={12} md={8} item>
               <TitleSection>
                 <Title>Confidis</Title>
                 <SubTitle>
@@ -46,7 +46,7 @@ function App() {
                 </SubTitle>
               </TitleSection>
             </Grid>
-            <Grid xs={4} item>
+            <Grid xs={12} md={4} item>
               <LinksSection>
                 <About>
                   Confidis focuses on ease-of-use, correctness, performance, and
@@ -59,6 +59,11 @@ function App() {
                   analyze disagreeing data sources for data aggregation. It was
                   further developed and sponsored by{" "}
                   <a href="https://wao.ai">wao.ai</a>.
+                  <br />
+                  <br />
+                  <a href="https://github.com/waoai/confidis">
+                    Read more on the README.md
+                  </a>
                 </About>
               </LinksSection>
             </Grid>
