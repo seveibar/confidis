@@ -6,7 +6,7 @@ Confidis is a key store for uncertain answers from multiple arguing sources with
 
 If you're aggregating information from multiple sources with mixed reliability, confidis will help you find the truth.
 
-More technically, confidis is a truth discovery engine that interatively updates a graph of bayesian probabilities and
+More technically, confidis is a Rust-WebAssembly truth discovery engine that interatively updates a graph of bayesian probabilities and
 is tuned for adverserial scenarios.
 
 ## Features
