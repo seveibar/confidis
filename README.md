@@ -75,7 +75,7 @@ Help wanted for this section.
 - question: An uncertain key.
 - source: An entity, e.g. a person, who can supply answers
 - answer: An answer to a question from a source. An uncertain value.
-- comparator: A way of comparing answers. If a comparator returns `0`, that means that two answers are equal. If a comparator returns `1` or greater, than means the answers are different. If a comparator returns `0...1`, that means that the answers are in some degree of agreement.
+- comparison_method: A method that indicates the similarity of answers, and whether or not they are acceptably close.
 
 ## API
 
