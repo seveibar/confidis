@@ -91,6 +91,7 @@ GET ANSWER TO <question_id>
 
 
 # Other commands
+BELIEVE <source_id>
 CLEAR ALL QUESTIONS
 CLEAR ALL ANSWERS
 GET SOURCES FOR <question_id>
