@@ -2,7 +2,7 @@
 
 Confidis is a key store for uncertain answers from multiple arguing sources with unknown reliability.
 
-[try it online!](https://waoai.github.io/confidis/)
+[try it online!](https://waoai.github.io/confidis/) or [watch me explain a simple example](https://www.youtube.com/watch?v=QoiWacSQErg)
 
 If you're aggregating information from multiple sources with mixed reliability, confidis will help you find the truth.
 
