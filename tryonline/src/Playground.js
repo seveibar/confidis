@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { Box, Grid, styled, colors } from "@material-ui/core"
 import ExpandingTextArea from "react-expanding-textarea"
+import * as confidis from "confidis/web"
 
 const defaultProgram = `
 
@@ -51,6 +52,7 @@ const TryItOut = styled(Box)({
 export default () => {
   const [text, setText] = useState(defaultProgram)
   const [output, setOutput] = useState("Some output \n\n\nsome more output")
+  console.log({ confidis })
   return (
     <Container>
       <Grid container>

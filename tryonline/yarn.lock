@@ -500,6 +500,13 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.8.3"
 
+"@babel/plugin-syntax-import-meta@^7.10.4":
+  version "7.10.4"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-import-meta/-/plugin-syntax-import-meta-7.10.4.tgz#ee601348c370fa334d2207be158777496521fd51"
+  integrity sha512-Yqfm+XDx0+Prh3VSeEQCPU81yC+JWZ2pDPFSS4ZdpfZhp4MkFMaDC1UqseovEKwSUpnIL7+vK+Clp7bfh0iD7g==
+  dependencies:
+    "@babel/helper-plugin-utils" "^7.10.4"
+
 "@babel/plugin-syntax-json-strings@^7.8.0":
   version "7.8.3"
   resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-json-strings/-/plugin-syntax-json-strings-7.8.3.tgz#01ca21b668cd8218c9e640cb6dd88c5412b2c96a"
@@ -3162,6 +3169,11 @@ concat-stream@^1.5.0:
     inherits "^2.0.3"
     readable-stream "^2.2.2"
     typedarray "^0.0.6"
+
+confidis@^0.1.5:
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/confidis/-/confidis-0.1.5.tgz#9f75d5f65a6db56d2749a072cc33af01b6b87939"
+  integrity sha512-JjWW0m41jvh9XOkUvsD0v/x9Ov7AEiuOzWNaiYOXaAXCNzYqEp3ulJCLVveZorDrlNHK2/NeN81L71vTaKFe0g==
 
 confusing-browser-globals@^1.0.9:
   version "1.0.9"
