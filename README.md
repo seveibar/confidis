@@ -1,6 +1,8 @@
 # Confidis
 
-Confidis is a key store for uncertain answers from multiple sources with mixed reliability.
+Confidis is a key store for uncertain answers from multiple arguing sources with unknown reliability.
+
+[try it online!](https://confidis.workaround.ai)
 
 If you're aggregating information from multiple sources with mixed reliability, confidis will help you find the truth.
 
