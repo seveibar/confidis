@@ -4,7 +4,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/confidis/5a34b24e1b0c2985e4ae.module.wasm"
   },
   {
-    "revision": "9dc4d4d52ae148f1f20e2ff9d19f77d6",
+    "revision": "d12d98b093ee879a7bd5315623ecc9eb",
     "url": "/confidis/index.html"
   },
   {
