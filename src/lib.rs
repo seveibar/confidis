@@ -21,9 +21,19 @@ impl GraphJS {
             g: Box::new(Graph::new()),
         }
     }
-    pub fn execute_command(&mut self, cmd_string: &str) -> JsValue {
-        let cmd = Command::from(cmd_string).unwrap();
-        let res = self.g.execute_command(&cmd).unwrap();
-        JsValue::from_serde(&res).unwrap()
+    pub fn execute_command(&mut self, cmd_string: &str) -> Result<JsValue, JsValue> {
+        let cmd = Command::from(cmd_string);
+        if cmd.is_err() {
+            return Err(JsValue::from_str(&cmd.err().unwrap()));
+        }
+        let res = self.g.execute_command(&cmd.unwrap());
+        if res.is_err() {
+            let err_val = res.err().unwrap();
+            return Err(JsValue::from_str(&err_val));
+        }
+        match JsValue::from_serde(&res.unwrap()) {
+            Ok(v) => Ok(v),
+            Err(v) => Err(JsValue::from_str("Error parsing command response")),
+        }
     }
 }
