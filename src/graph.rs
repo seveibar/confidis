@@ -54,45 +54,44 @@ fn argmaxf(vec: &Vec<f64>) -> usize {
 }
 
 pub struct Graph {
+    // All sources in system
     sources: HashMap<String, Source>,
+
+    // All questions in graph
     questions: HashMap<String, Question>,
+
+    // Default probability that a source will be correct
     default_source_quality: f64,
+
+    // Starting strength of a source, if this is low (1.0) the initial quality will be changed
+    // easily by new data. If higher, it's easier to resist adversaries with the "start good, turn bad"
+    // attack
     initial_source_strength: f64,
+
+    // Maximum strength of a source, impacts how effected they are by more recent
+    // correct/incorrect answers
     maximum_strength: f64,
+
+    // weight_of_question = -1. * log_{log_weight_factor}(1 - confidence)
+    // 10.0 means that 90% confidence has a weight of 1. 99% confidence has a weight of 2. 99.9% has a weight of 3.
     log_weight_factor: f64,
+    // quality of believed sources
     quality_of_believed_sources: f64,
+
+    // The equality/similarity system used to compare answers
     equalifier: Box<dyn Equalifier>,
 }
 
 impl Graph {
     pub fn new() -> Graph {
         Graph {
-            // All sources in system
             sources: HashMap::new(),
-
-            // All questions in graph
             questions: HashMap::new(),
-
-            // Default probability that a source will be correct
             default_source_quality: 0.5,
-
-            // Starting strength of a source, if this is low (1.0) the initial quality will be changed
-            // easily by new data. If higher, it's easier to resist adversaries with the "start good, turn bad"
-            // attack
             initial_source_strength: 1.0,
-
-            // Maximum strength of a source, impacts how effected they are by more recent
-            // correct/incorrect answers
             maximum_strength: 100.0,
-
-            // weight_of_question = -1. * log_{log_weight_factor}(1 - confidence)
-            // 10.0 means that 90% confidence has a weight of 1. 99% confidence has a weight of 2. 99.9% has a weight of 3.
             log_weight_factor: 10.0,
-
-            // quality of believed sources
             quality_of_believed_sources: 0.999,
-
-            // The equality/similarity system used to compare answers
             equalifier: Box::new(ExactEqualifier::new()),
         }
     }

@@ -28,6 +28,7 @@ const SubTitle = styled(Box)({
 const About = styled(Box)({
   fontSize: 18,
   lineHeight: 1.5,
+  padding: 8,
 })
 const Bottom = styled(Box)({})
 

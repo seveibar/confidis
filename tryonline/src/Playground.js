@@ -3,7 +3,7 @@ import { Box, Grid, styled, colors } from "@material-ui/core"
 import ExpandingTextArea from "react-expanding-textarea"
 
 let confidis
-import("confidis/bundler").then((c) => {
+import("confidis/webpack").then((c) => {
   confidis = c
 })
 
