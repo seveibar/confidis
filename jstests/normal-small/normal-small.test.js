@@ -48,7 +48,7 @@ const tests = combos({
   ],
   totalUniqueAnswers: [2, 5, 100],
   totalAnswers: [250, 500, 1000],
-  // knownQuestions: [0, 1, 10],
+  knownQuestions: [0, 1, 10],
   sourcesConfig: [
     ...[5, 15 /* 50 */].flatMap((numSources) => [
       {
@@ -70,6 +70,30 @@ const tests = combos({
         sources: createSources({
           accuracies: linspace(0, 0.5, numSources),
           answerBiases: normvec(expspace(0.01, 1, 1000, numSources)),
+        }),
+      },
+      {
+        name: "Lin Quantity, 50% Malicious Sources, Lin Acc 25-75%",
+        sources: createSources({
+          accuracies: linspace(0.25, 0.75, Math.floor(numSources / 2)).concat(
+            range(Math.floor(numSources / 2 + (numSources % 2))).map((a) => 0)
+          ),
+          answerBiases: linspace(0, 1, numSources),
+        }),
+      },
+      {
+        name: "Lin Quantity, 75% Malicious Sources, Lin Acc 25-75%",
+        sources: createSources({
+          accuracies: linspace(
+            0.25,
+            0.75,
+            Math.floor(numSources * 0.25)
+          ).concat(
+            range(Math.floor(numSources * 0.75 + (numSources % 2))).map(
+              (a) => 0
+            )
+          ),
+          answerBiases: linspace(0, 1, numSources),
         }),
       },
       // {
@@ -109,16 +133,24 @@ for (const testConfig of tests) {
   const {
     totalAnswers,
     totalUniqueAnswers,
+    knownQuestions,
     questionConfig: { questions, name: questionConfigName },
     sourcesConfig: { name: sourceConfigName, sources },
   } = testConfig
   const testName = `${
     questions.length
-  } Questions w/ ${questionConfigName}, ${totalAnswers} Answers, guess chance: ${Math.round(
+  } Questions (${knownQuestions} known) w/ ${questionConfigName}, ${totalAnswers} Answers, guess chance: ${Math.round(
     (1 / totalUniqueAnswers) * 100
   )}%, ${sources.length} Srcs: ${sourceConfigName}`
 
-  // console.log(sources)
+  const questionChanceOfSelection = questions.reduce(
+    (acc, q, i) => ({ ...acc, [`q${i}`]: q.answerBias }),
+    {}
+  )
+  const sourceChanceOfSelection = sources.reduce(
+    (acc, source, i) => ({ ...acc, [`s${i}`]: source.answerBias || 1 }),
+    {}
+  )
 
   const trials = 10
   test(testName, (t) => {
@@ -127,18 +159,10 @@ for (const testConfig of tests) {
       const rng = seedrandom(testName + trial)
       const g = GraphJS.new()
       g.execute_command("CONFIGURE initial_source_strength 10.0")
-      g.execute_command("CONFIGURE default_source_quality 0.5")
+      g.execute_command("CONFIGURE default_source_quality 0.1")
       g.execute_command("CONFIGURE log_weight_factor 100.0")
 
       let numberAnswered = 0
-      const questionChanceOfSelection = questions.reduce(
-        (acc, q, i) => ({ ...acc, [`q${i}`]: q.answerBias }),
-        {}
-      )
-      const sourceChanceOfSelection = sources.reduce(
-        (acc, source, i) => ({ ...acc, [`s${i}`]: source.answerBias || 1 }),
-        {}
-      )
       let questionAnswerFromSource = range(questions.length).reduce(
         (acc, i) => ({ ...acc, [`q${i}`]: {} }),
         {}
@@ -147,6 +171,19 @@ for (const testConfig of tests) {
         (acc, i) => ({ ...acc, [`s${i}`]: {} }),
         {}
       )
+      sourceAnswers.trusted_source = {}
+
+      // Randomly answer some known questions
+      g.execute_command("BELIEVE trusted_source")
+      let knownIndicies = range(questions.length)
+      shuffle(knownIndicies, { rng })
+      knownIndicies = knownIndicies.slice(0, knownQuestions)
+      for (let i = 0; i < knownIndicies.length; i++) {
+        g.execute_command(`SET q${i} 0 FROM trusted_source`)
+        questionAnswerFromSource[`q${i}`].trusted_source = 0
+        sourceAnswers.trusted_source[`q${i}`] = 0
+      }
+
       while (numberAnswered < totalAnswers) {
         const selectedQuestion = weighted.select(questionChanceOfSelection, {
           rand: rng,
@@ -231,19 +268,41 @@ for (const testConfig of tests) {
   })
 }
 
-test("overall score", (t) => {
-  const gAccAvg =
-    testResults.reduce((acc, { gAcc }) => acc + gAcc, 0) / testResults.length
-  const mvAccAvg =
-    testResults.reduce((acc, { mvAcc }) => acc + mvAcc, 0) / testResults.length
+test("average scores", (t) => {
   console.log("=================================")
-  console.log(
-    "Overall Score: ",
-    (gAccAvg - mvAccAvg).toFixed(3),
-    "(",
-    gAccAvg.toFixed(2),
-    mvAccAvg.toFixed(2),
-    ")"
-  )
+  for (const scoreStrings of [
+    [""],
+    ["0 known"],
+    ["1 known"],
+    ["10 known"],
+    ["Exponential Biased Selection"],
+    ["Exp Quantity", "10 known"],
+    ["Malicious Sources"],
+    ["Malicious Sources", "10 known", "250 Answers"],
+  ]) {
+    const relevantResults = testResults.filter(({ testName }) =>
+      scoreStrings.every((s) => testName.includes(s))
+    )
+    const gAccAvg =
+      relevantResults.reduce((acc, { gAcc }) => acc + gAcc, 0) /
+      relevantResults.length
+    const mvAccAvg =
+      relevantResults.reduce((acc, { mvAcc }) => acc + mvAcc, 0) /
+      relevantResults.length
+    console.log(
+      scoreStrings.join(",") || "Overall Score: ",
+      (gAccAvg - mvAccAvg).toFixed(3),
+      "(",
+      gAccAvg.toFixed(2),
+      mvAccAvg.toFixed(2),
+      ")"
+    )
+    // t.assert(
+    //   gAccAvg > mvAccAvg,
+    //   `Confidis should beat majority voting on "${
+    //     scoreStrings.join(",") || "overall"
+    //   }"`
+    // )
+  }
   t.pass()
 })

@@ -52,6 +52,7 @@ const TryItOut = styled(Box)({
   paddingRight: 16,
   marginBottom: 16,
 })
+let g
 
 export default () => {
   const [text, setText] = useState(defaultProgram)
@@ -75,7 +76,9 @@ export default () => {
     if (!confidis) {
       return
     }
-    const g = confidis.GraphJS.new()
+    if (g) g.free()
+
+    g = confidis.GraphJS.new()
     const output = []
     for (const line of text.split("\n")) {
       try {
