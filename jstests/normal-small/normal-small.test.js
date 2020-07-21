@@ -278,7 +278,6 @@ test("average scores", (t) => {
     ["Exponential Biased Selection"],
     ["Exp Quantity", "10 known"],
     ["Malicious Sources"],
-    ["Malicious Sources", "10 known", "250 Answers"],
   ]) {
     const relevantResults = testResults.filter(({ testName }) =>
       scoreStrings.every((s) => testName.includes(s))
@@ -297,12 +296,11 @@ test("average scores", (t) => {
       mvAccAvg.toFixed(2),
       ")"
     )
-    // t.assert(
-    //   gAccAvg > mvAccAvg,
-    //   `Confidis should beat majority voting on "${
-    //     scoreStrings.join(",") || "overall"
-    //   }"`
-    // )
+    t.assert(
+      gAccAvg > mvAccAvg,
+      `Confidis should beat majority voting on "${
+        scoreStrings.join(",") || "overall"
+      }"`
+    )
   }
-  t.pass()
 })
