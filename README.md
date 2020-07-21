@@ -1,6 +1,6 @@
 # Confidis
 
-Confidis is a key store for uncertain answers from multiple arguing sources with unknown reliability. Available as Create or via [npm](https://www.npmjs.com/package/confidis)
+Confidis is a key store for uncertain answers from multiple arguing sources with unknown reliability. Available as a Rust Crate or via [npm](https://www.npmjs.com/package/confidis) for NodeJS and browsers.
 
 [try it online!](https://waoai.github.io/confidis/) or [watch me explain a simple example](https://www.youtube.com/watch?v=QoiWacSQErg)
 
@@ -16,7 +16,7 @@ is tuned for adverserial scenarios.
 * Simple, easy-to-use API
 * Determine the quality of sources and the probability of their correctness
 * Determine the probability that an answer is correct
-* Performant against thousands of sources and millions of questions
+* Performant against thousands of sources and millions of questions. Uses WebAssembly when using npm module.
 * Can determine truth with exclusively poor sources (independent sources with accuracies less than 50%) 
 * Tested and adaptable to [adverserial scenarios](https://github.com/waoai/confidis/blob/master/ATTACKS.md)
 * Compare complex, multivariate answers
