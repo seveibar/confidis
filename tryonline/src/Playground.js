@@ -84,6 +84,8 @@ export default () => {
           output.push(
             `${result.answer} (${(result.confidence * 100).toFixed(3)}%)`
           )
+        } else if (result.cmd === "GetSource") {
+          output.push(`${result.quality.toFixed(3)}`)
         } else {
           output.push("")
         }

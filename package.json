@@ -1,8 +1,8 @@
 {
   "name": "confidis",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "scripts": {
-    "build": "rimraf ./pkg && mkdir pkg && wasm-pack build -t nodejs -d ./pkg/node && wasm-pack build -t bundler -d ./pkg/webpack && cp ./package.json ./pkg/package.json",
+    "build": "rimraf ./pkg && mkdir pkg && touch pkg/.npmignore && wasm-pack build -t nodejs -d ./pkg/node && wasm-pack build -t bundler -d ./pkg/webpack && cp ./package.json ./pkg/package.json",
     "test": "ava ./jstests/**/*.test.js"
   },
   "devDependencies": {

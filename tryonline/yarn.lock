@@ -3234,10 +3234,10 @@ concat-stream@^1.5.0:
     readable-stream "^2.2.2"
     typedarray "^0.0.6"
 
-confidis@^0.1.7:
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/confidis/-/confidis-0.1.7.tgz#6dca9d4183d9d0de816078cee3dc34545dd0dc0a"
-  integrity sha512-7JMlp9YaChbEtq7ZHiqXgJSQnYsutotp+OiZZdLjMxc+u5AqpjNC6imgwVgaUwUQrFQ6aWtcXoYxVpK9q2Otpg==
+confidis@^0.1.11:
+  version "0.1.11"
+  resolved "https://registry.yarnpkg.com/confidis/-/confidis-0.1.11.tgz#75e9ac7fc1159d83f9204711dcc482b478dded46"
+  integrity sha512-bN/b6xZmmIkfxcFR/F/zN36waNZHQvVyyNhGIDyQ3NPgtjWOfIQvEgb094TK/hSqoYzAx8P9zICnoyjbLf2vbg==
 
 confusing-browser-globals@^1.0.9:
   version "1.0.9"

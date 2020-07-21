@@ -18,6 +18,17 @@ const createSources = ({ accuracies, answerBiases }) => {
   }))
 }
 
+const normvec = (v) => {
+  const sum = v.reduce((acc, e) => acc + e, 0)
+  return v.map((e) => e / sum)
+}
+
+const expspace = (first, last, factor, total) => {
+  return range(total).map(
+    (x) => first + (last - first) * factor ** (x / total - 1)
+  )
+}
+
 const tests = combos({
   questionConfig: [
     {
@@ -29,16 +40,17 @@ const tests = combos({
       questions: range(100).map((i) => ({ answerBias: i })),
     },
     {
-      name: "10x Quadratic Biased Selection",
-      questions: range(100).map((i) => ({
-        answerBias: 1 + 9 * (i / 100) ** 2,
+      name: "Exponential Biased Selection",
+      questions: normvec(expspace(0.01, 1, 100, 100)).map((answerBias) => ({
+        answerBias,
       })),
     },
   ],
   totalUniqueAnswers: [2, 5, 100],
   totalAnswers: [250, 500, 1000],
+  // knownQuestions: [0, 1, 10],
   sourcesConfig: [
-    ...[10, 20, 50].flatMap((numSources) => [
+    ...[5, 15 /* 50 */].flatMap((numSources) => [
       {
         name: "Lin Quantity, Lin Acc 0 - 100%",
         sources: createSources({
@@ -47,40 +59,47 @@ const tests = combos({
         }),
       },
       {
-        name: "Lin Quantity, Lin Acc 0 - 25%",
+        name: "Lin Quantity, Lin Acc 0 - 50%",
         sources: createSources({
-          accuracies: linspace(0, 0.25, numSources),
+          accuracies: linspace(0, 0.5, numSources),
           answerBiases: linspace(0, 1, numSources),
         }),
       },
       {
-        name: "Lin Quantity, Lin Acc 75% - 100%",
+        name: "Exp Quantity, Lin Acc 0 - 50%",
         sources: createSources({
-          accuracies: linspace(0.75, 1, numSources),
-          answerBiases: linspace(0, 1, numSources),
+          accuracies: linspace(0, 0.5, numSources),
+          answerBiases: normvec(expspace(0.01, 1, 1000, numSources)),
         }),
       },
-      {
-        name: "Lin Quantity, Bad Quadratic Acc (x**2)",
-        sources: createSources({
-          accuracies: linspace(0, 1, numSources).map((x) => x ** 2),
-          answerBiases: linspace(0, 1, numSources),
-        }),
-      },
-      {
-        name: "Lin Quantity, Good Quadratic Acc (1-x**2)",
-        sources: createSources({
-          accuracies: linspace(0, 1, numSources).map((x) => 1 - x ** 2),
-          answerBiases: linspace(0, 1, numSources),
-        }),
-      },
-      {
-        name: "Quadratic Quantity, Bad Quadratic Acc (1-x**2)",
-        sources: createSources({
-          accuracies: linspace(0, 1, numSources).map((x) => x ** 2),
-          answerBiases: linspace(0, 1, numSources).map((x) => x ** 2),
-        }),
-      },
+      // {
+      //   name: "Lin Quantity, Lin Acc 75% - 100%",
+      //   sources: createSources({
+      //     accuracies: linspace(0.75, 1, numSources),
+      //     answerBiases: linspace(0, 1, numSources),
+      //   }),
+      // },
+      // {
+      //   name: "Lin Quantity, Bad Quadratic Acc (x**2)",
+      //   sources: createSources({
+      //     accuracies: linspace(0, 1, numSources).map((x) => x ** 2),
+      //     answerBiases: linspace(0, 1, numSources),
+      //   }),
+      // },
+      // {
+      //   name: "Lin Quantity, Good Quadratic Acc (1-x**2)",
+      //   sources: createSources({
+      //     accuracies: linspace(0, 1, numSources).map((x) => 1 - x ** 2),
+      //     answerBiases: linspace(0, 1, numSources),
+      //   }),
+      // },
+      // {
+      //   name: "Quadratic Quantity, Bad Quadratic Acc (x**2)",
+      //   sources: createSources({
+      //     accuracies: linspace(0, 1, numSources).map((x) => x ** 2),
+      //     answerBiases: linspace(0, 1, numSources).map((x) => x ** 2),
+      //   }),
+      // },
     ]),
   ],
 })
@@ -99,13 +118,17 @@ for (const testConfig of tests) {
     (1 / totalUniqueAnswers) * 100
   )}%, ${sources.length} Srcs: ${sourceConfigName}`
 
-  const trials = 5
+  // console.log(sources)
+
+  const trials = 10
   test(testName, (t) => {
+    t.timeout(1000 * 30, "Each test must complete in less than 30 seconds")
     for (let trial = 0; trial < trials; trial++) {
       const rng = seedrandom(testName + trial)
       const g = GraphJS.new()
-      g.execute_command("CONFIGURE initial_source_strength 50.0")
-      g.execute_command("CONFIGURE default_source_quality 0.01")
+      g.execute_command("CONFIGURE initial_source_strength 10.0")
+      g.execute_command("CONFIGURE default_source_quality 0.5")
+      g.execute_command("CONFIGURE log_weight_factor 100.0")
 
       let numberAnswered = 0
       const questionChanceOfSelection = questions.reduce(
@@ -120,14 +143,16 @@ for (const testConfig of tests) {
         (acc, i) => ({ ...acc, [`q${i}`]: {} }),
         {}
       )
+      let sourceAnswers = range(sources.length).reduce(
+        (acc, i) => ({ ...acc, [`s${i}`]: {} }),
+        {}
+      )
       while (numberAnswered < totalAnswers) {
         const selectedQuestion = weighted.select(questionChanceOfSelection, {
           rand: rng,
-          normalize: true,
         })
         const selectedSource = weighted.select(sourceChanceOfSelection, {
           rand: rng,
-          normalize: true,
         })
         // no duplicate answers
         if (
@@ -144,33 +169,53 @@ for (const testConfig of tests) {
           ? 0
           : Math.floor(rng() * totalUniqueAnswers)
         questionAnswerFromSource[selectedQuestion][selectedSource] = answer
-        g.execute_command(
-          `SET ${selectedQuestion} ${answer} FROM ${selectedSource}`
-        )
+        sourceAnswers[selectedSource][selectedQuestion] = answer
+        const cmdString = `SET ${selectedQuestion} ${answer} FROM ${selectedSource}`
+        // console.log(cmdString)
+        g.execute_command(cmdString)
         numberAnswered++
       }
+
+      // Force convergence
+      // for (let k = 0; k < 10; k++) {
+      //   const questionIndices = range(questions.length)
+      //   shuffle(questionIndices)
+      //   for (const i of questionIndices) {
+      //     const answers = Object.values(questionAnswerFromSource[`q${i}`])
+      //     if (answers.length === 0) continue
+      //     g.execute_command(`GET ANSWER TO q${i}`)
+      //   }
+      // }
 
       const gAnswers = {}
       const mvAnswers = {}
       for (const i of range(questions.length)) {
         const answers = Object.values(questionAnswerFromSource[`q${i}`])
         if (answers.length === 0) continue
-        mvAnswers[`q${i}`] = parseInt(
-          mostCommon(answers.map((a) => a.toString()))[0].token
-        )
+        const freqList = mostCommon(answers.map((a) => a.toString()))
+        // Select the highest frequency, then randomize the one selected
+        const highestFreq = freqList.filter((l) => l.count >= freqList[0].count)
+        shuffle(highestFreq, { rng })
+
+        mvAnswers[`q${i}`] = parseInt(highestFreq[0].token)
         const { answer, confidence } = g.execute_command(`GET ANSWER TO q${i}`)
         gAnswers[`q${i}`] = parseInt(answer)
       }
 
+      const numberPossibleToGetCorrect = Object.values(
+        questionAnswerFromSource
+      ).filter((answerMap) => Object.values(answerMap).includes(0)).length
+
       const gAcc =
         Object.values(gAnswers).filter((a) => a === 0).length /
-        Object.values(gAnswers).length
+        numberPossibleToGetCorrect
       const mvAcc =
         Object.values(mvAnswers).filter((a) => a === 0).length /
-        Object.values(gAnswers).length
+        numberPossibleToGetCorrect
 
       testResults.push({ testName, gAcc, mvAcc })
       // t.assert(gAcc >= mvAcc - 0.2)
+      g.free()
     }
     const relevantResults = testResults.filter(
       ({ testName: tn }) => tn === testName
@@ -185,3 +230,20 @@ for (const testConfig of tests) {
     t.pass(testName)
   })
 }
+
+test("overall score", (t) => {
+  const gAccAvg =
+    testResults.reduce((acc, { gAcc }) => acc + gAcc, 0) / testResults.length
+  const mvAccAvg =
+    testResults.reduce((acc, { mvAcc }) => acc + mvAcc, 0) / testResults.length
+  console.log("=================================")
+  console.log(
+    "Overall Score: ",
+    (gAccAvg - mvAccAvg).toFixed(3),
+    "(",
+    gAccAvg.toFixed(2),
+    mvAccAvg.toFixed(2),
+    ")"
+  )
+  t.pass()
+})
