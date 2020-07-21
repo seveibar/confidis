@@ -14,7 +14,11 @@ type QuestionId = String;
 #[derive(Debug)]
 pub struct Source {
     name: SourceId,
+
+    // roughly corresponds to the probability a source will answer correctly
     quality: f64,
+
+    // the amount of evidence to support the correctness of quality
     strength: f64,
 }
 
@@ -75,6 +79,7 @@ pub struct Graph {
     // weight_of_question = -1. * log_{log_weight_factor}(1 - confidence)
     // 10.0 means that 90% confidence has a weight of 1. 99% confidence has a weight of 2. 99.9% has a weight of 3.
     log_weight_factor: f64,
+
     // quality of believed sources
     quality_of_believed_sources: f64,
 
@@ -205,31 +210,40 @@ impl Graph {
         Ok(())
     }
 
+    pub fn create_source_if_not_exists(&mut self, source_name: &str) -> () {
+        if !self.sources.contains_key(source_name) {
+            self.sources.insert(
+                source_name.to_string(),
+                Source {
+                    name: source_name.to_string(),
+                    quality: self.default_source_quality,
+                    strength: self.initial_source_strength,
+                },
+            );
+        }
+    }
+
+    pub fn create_question_if_not_exists(&mut self, question_name: &str) -> () {
+        if !self.questions.contains_key(question_name) {
+            self.questions.insert(
+                question_name.to_string(),
+                Question {
+                    name: question_name.to_string(),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
     pub fn execute_command(&mut self, cmd: &Command) -> Result<CommandResponse, String> {
         match cmd.cmd {
             CommandType::Set => {
                 let source_name = cmd.source.as_ref().unwrap();
                 let question_name = cmd.question.as_ref().unwrap();
 
-                if !self.sources.contains_key(source_name) {
-                    self.sources.insert(
-                        source_name.to_string(),
-                        Source {
-                            name: source_name.to_string(),
-                            quality: self.default_source_quality,
-                            strength: self.initial_source_strength,
-                        },
-                    );
-                }
-                if !self.questions.contains_key(question_name) {
-                    self.questions.insert(
-                        question_name.to_string(),
-                        Question {
-                            name: question_name.to_string(),
-                            ..Default::default()
-                        },
-                    );
-                }
+                self.create_source_if_not_exists(source_name);
+                self.create_question_if_not_exists(question_name);
+
                 let answer = Answer::new(cmd.answer.as_ref().unwrap().clone(), source_name.clone());
 
                 self.remove_question_effect(question_name);
@@ -248,6 +262,7 @@ impl Graph {
             }
             CommandType::GetAnswer => {
                 let question_name = cmd.question.as_ref().unwrap();
+                self.create_question_if_not_exists(question_name);
 
                 self.remove_question_effect(question_name);
                 self.compute_question_answers(question_name)
@@ -270,12 +285,27 @@ impl Graph {
             }
             CommandType::GetSource => {
                 let source_name = cmd.source.as_ref().unwrap();
+                self.create_source_if_not_exists(source_name);
 
                 let source: &Source = self.sources.get(source_name).unwrap();
 
                 Ok(CommandResponse {
                     cmd: CommandType::GetSource,
                     quality: Some(source.quality),
+                    ..Default::default()
+                })
+            }
+            CommandType::Believe => {
+                let source_name = cmd.source.as_ref().unwrap();
+                self.create_source_if_not_exists(source_name);
+
+                let mut source = self.sources.get_mut(source_name).unwrap();
+
+                source.quality = self.quality_of_believed_sources;
+                source.strength = self.maximum_strength;
+
+                Ok(CommandResponse {
+                    cmd: CommandType::Believe,
                     ..Default::default()
                 })
             }
@@ -411,6 +441,10 @@ fn test_graph_1() {
     GET SOURCE s2
     GET SOURCE s3
     GET SOURCE s4
+
+    BELIEVE s4
+    GET SOURCE s4
+    GET ANSWER TO q6
     "
     .lines()
     .filter(|l| !l.trim().is_empty())
@@ -443,6 +477,8 @@ fn test_graph_1() {
 > 0.866
 > 0.504
 > 0.866
-> 0.134"
+> 0.134
+> 0.999
+> w (99.900%)"
     );
 }
