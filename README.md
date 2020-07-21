@@ -1,8 +1,10 @@
 # Confidis
 
-Confidis is a key store for uncertain answers from multiple arguing sources with unknown reliability.
+Confidis is a key store for uncertain answers from multiple arguing sources with unknown reliability. Available as Create or via [npm](https://www.npmjs.com/package/confidis)
 
 [try it online!](https://waoai.github.io/confidis/) or [watch me explain a simple example](https://www.youtube.com/watch?v=QoiWacSQErg)
+
+[![](https://user-images.githubusercontent.com/1910070/88008238-cfbbdc80-cadd-11ea-92b7-38b3c3cfaa76.png)](https://waoai.github.io/confidis/)
 
 If you're aggregating information from multiple sources with mixed reliability, confidis will help you find the truth.
 
