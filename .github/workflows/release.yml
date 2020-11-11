@@ -23,7 +23,7 @@ jobs:
       - name: Install Node Deps
         run: npm install
       - name: Install Rust Deps
-        run: cargo install --path .
+        run: cargo install wasm-pack
       - name: Build
         run: npm run build
       - name: Release
