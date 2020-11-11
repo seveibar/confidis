@@ -1,3 +1,4 @@
+extern crate console_error_panic_hook;
 extern crate wasm_bindgen;
 
 pub mod cluster;
@@ -8,6 +9,7 @@ pub mod graph;
 use command::Command;
 use equalifier::JSEqualifier;
 use graph::Graph;
+use std::panic;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -15,15 +17,21 @@ struct GraphJS {
     g: Box<Graph>,
 }
 
+pub fn setup_js_panic() {
+    console_error_panic_hook::set_once();
+}
+
 #[wasm_bindgen]
 impl GraphJS {
     pub fn new() -> Self {
+        setup_js_panic();
         GraphJS {
             g: Box::new(Graph::new()),
         }
     }
 
     pub fn new_with_equalifier(js_func: &js_sys::Function) -> Self {
+        setup_js_panic();
         let equalifier = Box::new(JSEqualifier::new(js_func));
         GraphJS {
             g: Box::new(Graph::new_with_equalifier(equalifier)),
