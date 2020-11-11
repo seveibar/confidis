@@ -26,6 +26,8 @@ jobs:
         run: cargo install wasm-pack
       - name: Build
         run: npm run build
+      - name: Run Javascript Tests
+        run: npm run test
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
