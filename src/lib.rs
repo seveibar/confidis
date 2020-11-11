@@ -5,7 +5,8 @@ pub mod command;
 pub mod equalifier;
 pub mod graph;
 
-use command::{Command, CommandResponse};
+use command::Command;
+use equalifier::JSEqualifier;
 use graph::Graph;
 use wasm_bindgen::prelude::*;
 
@@ -22,9 +23,10 @@ impl GraphJS {
         }
     }
 
-    pub fn new_with_equalifier() -> Self {
+    pub fn new_with_equalifier(js_func: &js_sys::Function) -> Self {
+        let equalifier = Box::new(JSEqualifier::new(js_func));
         GraphJS {
-            g: Box::new(Graph::new()),
+            g: Box::new(Graph::new_with_equalifier(equalifier)),
         }
     }
 
