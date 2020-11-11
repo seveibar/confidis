@@ -21,6 +21,13 @@ impl GraphJS {
             g: Box::new(Graph::new()),
         }
     }
+
+    pub fn new_with_equalifier() -> Self {
+        GraphJS {
+            g: Box::new(Graph::new()),
+        }
+    }
+
     pub fn execute_command(&mut self, cmd_string: &str) -> Result<JsValue, JsValue> {
         let cmd = Command::from(cmd_string);
         if cmd.is_err() {

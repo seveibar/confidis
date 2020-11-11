@@ -101,6 +101,12 @@ impl Graph {
         }
     }
 
+    pub fn new_with_equalifier(equalifier: Box<dyn Equalifier>) -> Graph {
+        let mut g = Graph::new();
+        g.equalifier = equalifier;
+        return g;
+    }
+
     // Modify connected sources to indicate whether or not they're correct or incorrect
     fn add_question_effect(&mut self, question_name: &str) {
         let question = self.questions.get_mut(question_name).unwrap();
@@ -407,6 +413,18 @@ impl Graph {
                     ..Default::default()
                 })
             }
+            CommandType::TestEquality => {
+                let answer1 =
+                    Answer::new(cmd.answer1.as_ref().unwrap().into(), String::from("None"));
+                let answer2 =
+                    Answer::new(cmd.answer2.as_ref().unwrap().into(), String::from("None"));
+
+                Ok(CommandResponse {
+                    cmd: CommandType::TestEquality,
+                    distance: Some(self.equalifier.get_distance(&answer1, &answer2)),
+                    ..Default::default()
+                })
+            }
             _ => Err("Not implemented or invalid command".into()),
         }
     }
@@ -445,6 +463,9 @@ fn test_graph_1() {
     BELIEVE s4
     GET SOURCE s4
     GET ANSWER TO q6
+
+    TEST EQUALITY a a
+    TEST EQUALITY a b
     "
     .lines()
     .filter(|l| !l.trim().is_empty())
@@ -459,7 +480,10 @@ fn test_graph_1() {
     for command in &commands {
         info!("\n{}", command);
         let output = g.execute_command(&command).unwrap();
-        if output.cmd == CommandType::GetAnswer || output.cmd == CommandType::GetSource {
+        if output.cmd == CommandType::GetAnswer
+            || output.cmd == CommandType::GetSource
+            || output.cmd == CommandType::TestEquality
+        {
             info!("> {}", output);
             outputs.push(format!("> {}", &output));
         }
@@ -479,6 +503,8 @@ fn test_graph_1() {
 > 0.866
 > 0.134
 > 0.999
-> w (99.900%)"
+> w (99.900%)
+> 0.000
+> 1.000"
     );
 }

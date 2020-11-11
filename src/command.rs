@@ -11,6 +11,7 @@ pub enum CommandType {
     GetSource,
     Believe,
     Configure,
+    TestEquality,
 }
 
 impl Default for CommandType {
@@ -27,6 +28,9 @@ pub struct Command {
     pub answer: Option<String>,
     pub config_key: Option<String>,
     pub config_val: Option<String>,
+
+    pub answer1: Option<String>,
+    pub answer2: Option<String>,
 }
 
 impl fmt::Display for Command {
@@ -51,6 +55,12 @@ impl fmt::Display for Command {
                 &self.config_val.as_ref().unwrap()
             ),
             CommandType::Invalid => write!(f, "INVALID"),
+            CommandType::TestEquality => write!(
+                f,
+                "TEST EQUALITY {} {}",
+                &self.answer1.as_ref().unwrap(),
+                &self.answer2.as_ref().unwrap(),
+            ),
         }
     }
 }
@@ -114,6 +124,18 @@ impl Command {
                     ..Default::default()
                 })
             }
+            "TEST" | "test" => {
+                if items[1] == "EQUALITY" {
+                    Ok(Command {
+                        cmd: CommandType::TestEquality,
+                        answer1: Some(String::from(items[2])),
+                        answer2: Some(String::from(items[3])),
+                        ..Default::default()
+                    })
+                } else {
+                    Err(format!("Invalid TEST command: \"{}\"", line))
+                }
+            }
             _ => Err(format!("Invalid command starting token: {}", items[0])),
         }
     }
@@ -150,6 +172,7 @@ pub struct CommandResponse {
     pub quality: Option<f64>,
     pub answer: Option<String>,
     pub confidence: Option<f64>,
+    pub distance: Option<f64>,
 }
 
 impl fmt::Display for CommandResponse {
@@ -162,6 +185,7 @@ impl fmt::Display for CommandResponse {
                 self.confidence.unwrap() * 100.
             ),
             CommandType::GetSource => write!(f, "{:.3}", self.quality.unwrap()),
+            CommandType::TestEquality => write!(f, "{:.3}", self.distance.unwrap()),
             _ => write!(f, ""),
         }
     }

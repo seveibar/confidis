@@ -14,6 +14,7 @@ assert_approx_eq = "1.1.0"
 log = "0.4.8"
 pretty_env_logger = "0.4.0"
 structopt = "0.3.15"
+js-sys = "0.3.45"
 wasm-bindgen = { version = "0.2.65", features = ["serde-serialize"] }
 serde = { version = "1.0", features = ["derive"] }
 
