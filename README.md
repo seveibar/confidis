@@ -32,8 +32,10 @@ In `nodejs`:
 ```javascript
 const { GraphJS } = require("confidis/node")
 
-GraphJS.execute_command("SET q1 a FROM s1")
-GraphJS.execute_command("GET ANSWER TO q1") // { "cmd": "GetAnswer", confidience: 0.5, answer: "a" }
+const g = GraphJS.new()
+
+g.execute_command("SET q1 a FROM s1")
+g.execute_command("GET ANSWER TO q1") // { "cmd": "GetAnswer", confidience: 0.5, answer: "a" }
 ```
 
 ### Javascript (Browser)
@@ -61,8 +63,10 @@ import("confidis/webpack").then((c) => {
 
 const GraphJS = confidis.GraphJS
 
-GraphJS.execute_command("SET q1 a FROM s1")
-GraphJS.execute_command("GET ANSWER TO q1") // { "cmd": "GetAnswer", confidience: 0.5, answer: "a" }
+const g = GraphJS.new()
+
+g.execute_command("SET q1 a FROM s1")
+g.execute_command("GET ANSWER TO q1") // { "cmd": "GetAnswer", confidience: 0.5, answer: "a" }
 ```
 
 There is a working implementation in the `tryonline` folder that can be used for reference.
