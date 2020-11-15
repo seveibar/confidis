@@ -50,4 +50,4 @@ jobs:
           npm install
           npm link confidis
           git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/waoai/confidis.git
-          npm run gh-pages -- -u "github-actions-bot <support+actions@github.com>"
+          npm run deploy -- -u "github-actions-bot <support+actions@github.com>"
