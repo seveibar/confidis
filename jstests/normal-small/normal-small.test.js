@@ -129,6 +129,8 @@ const tests = combos({
 })
 
 const testResults = []
+let setCommandsRun = 0
+const testStartTime = Date.now()
 for (const testConfig of tests) {
   const {
     totalAnswers,
@@ -137,11 +139,10 @@ for (const testConfig of tests) {
     questionConfig: { questions, name: questionConfigName },
     sourcesConfig: { name: sourceConfigName, sources },
   } = testConfig
-  const testName = `${
-    questions.length
-  } Questions (${knownQuestions} known) w/ ${questionConfigName}, ${totalAnswers} Answers, guess chance: ${Math.round(
-    (1 / totalUniqueAnswers) * 100
-  )}%, ${sources.length} Srcs: ${sourceConfigName}`
+  const testName = `${questions.length
+    } Questions (${knownQuestions} known) w/ ${questionConfigName}, ${totalAnswers} Answers, guess chance: ${Math.round(
+      (1 / totalUniqueAnswers) * 100
+    )}%, ${sources.length} Srcs: ${sourceConfigName}`
 
   const questionChanceOfSelection = questions.reduce(
     (acc, q, i) => ({ ...acc, [`q${i}`]: q.answerBias }),
@@ -179,6 +180,7 @@ for (const testConfig of tests) {
       shuffle(knownIndicies, { rng })
       knownIndicies = knownIndicies.slice(0, knownQuestions)
       for (let i = 0; i < knownIndicies.length; i++) {
+        setCommandsRun += 1
         g.execute_command(`SET q${i} 0 FROM trusted_source`)
         questionAnswerFromSource[`q${i}`].trusted_source = 0
         sourceAnswers.trusted_source[`q${i}`] = 0
@@ -209,6 +211,7 @@ for (const testConfig of tests) {
         sourceAnswers[selectedSource][selectedQuestion] = answer
         const cmdString = `SET ${selectedQuestion} ${answer} FROM ${selectedSource}`
         // console.log(cmdString)
+        setCommandsRun += 1
         g.execute_command(cmdString)
         numberAnswered++
       }
@@ -298,9 +301,9 @@ test("average scores", (t) => {
     )
     t.assert(
       gAccAvg > mvAccAvg,
-      `Confidis should beat majority voting on "${
-        scoreStrings.join(",") || "overall"
+      `Confidis should beat majority voting on "${scoreStrings.join(",") || "overall"
       }"`
     )
   }
+  console.log(`Approximate time/1000 sets in ms: ${(Date.now() - testStartTime) / (setCommandsRun / 1000)}`)
 })
