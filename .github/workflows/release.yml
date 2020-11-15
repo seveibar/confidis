@@ -44,5 +44,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd tryonline
+          npm install
           npm link confidis
           npm run deploy
