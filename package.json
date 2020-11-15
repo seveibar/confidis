@@ -15,6 +15,7 @@
     "rimraf": "^3.0.2",
     "seedrandom": "^3.0.5",
     "shuffle-array": "^1.0.1",
+    "wasm-pack": "^0.9.1",
     "weighted": "^0.3.0"
   }
 }
