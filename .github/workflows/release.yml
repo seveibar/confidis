@@ -32,7 +32,7 @@ jobs:
         run: ls
       - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
       - name: Link NPM Package
@@ -41,9 +41,10 @@ jobs:
           npm link
       - name: Build and Deploy GH-Pages
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
         run: |
           cd tryonline
           npm install
           npm link confidis
-          npm run deploy
+          git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/waoai/confidis.git
+          npm run gh-pages -- -u "github-actions-bot <support+actions@github.com>"
