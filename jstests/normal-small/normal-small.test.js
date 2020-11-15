@@ -8,6 +8,16 @@ const weighted = require("weighted")
 const shuffle = require("shuffle-array")
 const mostCommon = require("most-common")
 
+let testOutputs = []
+const log = (...args) => {
+  console.log(...args)
+  testOutputs.push(
+    args
+      .map((a) => (typeof a === "object" ? JSON.stringify(a) : a.toString()))
+      .join(" ")
+  )
+}
+
 const globalRng = seedrandom("globalRng")
 const createSources = ({ accuracies, answerBiases }) => {
   const ilist = range(accuracies.length)
@@ -139,10 +149,11 @@ for (const testConfig of tests) {
     questionConfig: { questions, name: questionConfigName },
     sourcesConfig: { name: sourceConfigName, sources },
   } = testConfig
-  const testName = `${questions.length
-    } Questions (${knownQuestions} known) w/ ${questionConfigName}, ${totalAnswers} Answers, guess chance: ${Math.round(
-      (1 / totalUniqueAnswers) * 100
-    )}%, ${sources.length} Srcs: ${sourceConfigName}`
+  const testName = `${
+    questions.length
+  } Questions (${knownQuestions} known) w/ ${questionConfigName}, ${totalAnswers} Answers, guess chance: ${Math.round(
+    (1 / totalUniqueAnswers) * 100
+  )}%, ${sources.length} Srcs: ${sourceConfigName}`
 
   const questionChanceOfSelection = questions.reduce(
     (acc, q, i) => ({ ...acc, [`q${i}`]: q.answerBias }),
@@ -266,13 +277,13 @@ for (const testConfig of tests) {
     const mvAccAvg =
       relevantResults.reduce((acc, { mvAcc }) => acc + mvAcc, 0) /
       relevantResults.length
-    console.log(testName.padEnd(150), gAccAvg.toFixed(2), mvAccAvg.toFixed(2))
+    log(testName.padEnd(150), gAccAvg.toFixed(2), mvAccAvg.toFixed(2))
     t.pass(testName)
   })
 }
 
 test("average scores", (t) => {
-  console.log("=================================")
+  log("=================================")
   for (const scoreStrings of [
     [""],
     ["0 known"],
@@ -291,7 +302,7 @@ test("average scores", (t) => {
     const mvAccAvg =
       relevantResults.reduce((acc, { mvAcc }) => acc + mvAcc, 0) /
       relevantResults.length
-    console.log(
+    log(
       scoreStrings.join(",") || "Overall Score: ",
       (gAccAvg - mvAccAvg).toFixed(3),
       "(",
@@ -301,9 +312,15 @@ test("average scores", (t) => {
     )
     t.assert(
       gAccAvg > mvAccAvg,
-      `Confidis should beat majority voting on "${scoreStrings.join(",") || "overall"
+      `Confidis should beat majority voting on "${
+        scoreStrings.join(",") || "overall"
       }"`
     )
   }
-  console.log(`Approximate time/1000 sets in ms: ${(Date.now() - testStartTime) / (setCommandsRun / 1000)}`)
+  console.log(
+    `Approximate time/1000 sets in ms: ${
+      (Date.now() - testStartTime) / (setCommandsRun / 1000)
+    }`
+  )
+  t.snapshot(testOutputs.join("\n"))
 })

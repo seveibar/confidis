@@ -8,6 +8,7 @@ pub enum CommandType {
     Invalid,
     Set,
     GetAnswer,
+    GetAnswers,
     GetSource,
     Believe,
     Configure,
@@ -61,6 +62,9 @@ impl fmt::Display for Command {
                 &self.answer1.as_ref().unwrap(),
                 &self.answer2.as_ref().unwrap(),
             ),
+            CommandType::GetAnswers => {
+                write!(f, "GET ANSWERS TO {}", &self.question.as_ref().unwrap())
+            }
         }
     }
 }
@@ -101,6 +105,12 @@ impl Command {
                     Ok(Command {
                         cmd: CommandType::GetSource,
                         source: Some(String::from(items[2])),
+                        ..Default::default()
+                    })
+                } else if items[1] == "ANSWERS" && items[2] == "TO" {
+                    Ok(Command {
+                        cmd: CommandType::GetAnswers,
+                        question: Some(String::from(items[3])),
                         ..Default::default()
                     })
                 } else {
@@ -166,6 +176,12 @@ impl fmt::Display for Answer {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AnswerConfidencePair {
+    pub answer: String,
+    pub confidence: f64,
+}
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct CommandResponse {
     pub cmd: CommandType,
@@ -173,6 +189,7 @@ pub struct CommandResponse {
     pub answer: Option<String>,
     pub confidence: Option<f64>,
     pub distance: Option<f64>,
+    pub answers: Option<Vec<AnswerConfidencePair>>,
 }
 
 impl fmt::Display for CommandResponse {
@@ -186,6 +203,20 @@ impl fmt::Display for CommandResponse {
             ),
             CommandType::GetSource => write!(f, "{:.3}", self.quality.unwrap()),
             CommandType::TestEquality => write!(f, "{:.3}", self.distance.unwrap()),
+            CommandType::GetAnswers => {
+                let answer_confidence_pairs = self.answers.as_ref().unwrap();
+                write!(
+                    f,
+                    "{}",
+                    answer_confidence_pairs
+                        .iter()
+                        .map(|acp| format!("{} ({:.3}%)", acp.answer, acp.confidence * 100.))
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                )
+                .unwrap();
+                return Ok(());
+            }
             _ => write!(f, ""),
         }
     }

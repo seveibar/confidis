@@ -1,5 +1,5 @@
 use crate::cluster::compute_clusters;
-use crate::command::{Answer, Command, CommandResponse, CommandType};
+use crate::command::{Answer, AnswerConfidencePair, Command, CommandResponse, CommandType};
 use crate::equalifier::{
     Equalifier, ExactEqualifier, NumericEqualifier, NumericVecEqualifier, VecDistAlgo,
 };
@@ -87,6 +87,12 @@ pub struct Graph {
     equalifier: Box<dyn Equalifier>,
 }
 
+struct AnswerClustersWithConfidences {
+    pub clusters: Vec<Vec<usize>>,
+    pub cluster_confidences: Vec<f64>,
+    pub correct_cluster: usize,
+}
+
 impl Graph {
     pub fn new() -> Graph {
         Graph {
@@ -172,8 +178,11 @@ impl Graph {
         }
     }
 
-    fn compute_question_answers(&mut self, question_name: &str) -> Result<(), String> {
-        let mut question = self.questions.get_mut(question_name).unwrap();
+    fn compute_answer_clusters_with_confidence(
+        &self,
+        question_name: &str,
+    ) -> Result<AnswerClustersWithConfidences, String> {
+        let question = self.questions.get(question_name).unwrap();
         let clusters: Vec<Vec<usize>> =
             compute_clusters(&question.answers, self.equalifier.as_ref()).unwrap();
         let mut cluster_confidences: Vec<f64> = vec![0.0; clusters.len()];
@@ -191,6 +200,23 @@ impl Graph {
         info!("cluster confidences: {:?}", cluster_confidences);
 
         let correct_cluster: usize = argmaxf(&cluster_confidences);
+
+        Ok(AnswerClustersWithConfidences {
+            clusters: clusters,
+            cluster_confidences: cluster_confidences,
+            correct_cluster: correct_cluster,
+        })
+    }
+
+    fn compute_question_answers(&mut self, question_name: &str) -> Result<(), String> {
+        let AnswerClustersWithConfidences {
+            clusters,
+            cluster_confidences,
+            correct_cluster,
+        } = self
+            .compute_answer_clusters_with_confidence(question_name)
+            .unwrap();
+        let mut question = self.questions.get_mut(question_name).unwrap();
 
         // TODO sort by best source first
         question.correct_answers = clusters[correct_cluster]
@@ -425,6 +451,37 @@ impl Graph {
                     ..Default::default()
                 })
             }
+            CommandType::GetAnswers => {
+                let mut answers = Vec::new();
+
+                let analysis = self
+                    .compute_answer_clusters_with_confidence(cmd.question.as_ref().unwrap())
+                    .unwrap();
+
+                let question = self.questions.get(cmd.question.as_ref().unwrap()).unwrap();
+
+                let mut answer_hashes_added = HashSet::new();
+
+                for cluster_index in 0..analysis.clusters.len() {
+                    for answer_index in analysis.clusters[cluster_index].iter() {
+                        let answer = &question.answers[*answer_index];
+                        if answer_hashes_added.contains(&answer.hash) {
+                            continue;
+                        };
+                        answer_hashes_added.insert(answer.hash);
+                        answers.push(AnswerConfidencePair {
+                            answer: answer.content.clone(),
+                            confidence: analysis.cluster_confidences[cluster_index],
+                        });
+                    }
+                }
+
+                Ok(CommandResponse {
+                    cmd: CommandType::GetAnswers,
+                    answers: Some(answers),
+                    ..Default::default()
+                })
+            }
             _ => Err("Not implemented or invalid command".into()),
         }
     }
@@ -466,6 +523,8 @@ fn test_graph_1() {
 
     TEST EQUALITY a a
     TEST EQUALITY a b
+
+    GET ANSWERS TO q2
     "
     .lines()
     .filter(|l| !l.trim().is_empty())
@@ -483,6 +542,7 @@ fn test_graph_1() {
         if output.cmd == CommandType::GetAnswer
             || output.cmd == CommandType::GetSource
             || output.cmd == CommandType::TestEquality
+            || output.cmd == CommandType::GetAnswers
         {
             info!("> {}", output);
             outputs.push(format!("> {}", &output));
@@ -505,6 +565,7 @@ fn test_graph_1() {
 > 0.999
 > w (99.900%)
 > 0.000
-> 1.000"
+> 1.000
+> b (98.215%), c (50.379%), w (99.900%)"
     );
 }
