@@ -28,6 +28,8 @@ jobs:
         run: npm run build
       - name: Run Javascript Tests
         run: npm run test
+      - name: Test listdir
+        run: ls
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
