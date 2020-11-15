@@ -16,6 +16,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 12
+      - uses: oleksiyrudenko/gha-git-credentials@v2-latest
+        with:
+          token: '${{ secrets.RELEASE_GITHUB_TOKEN }}'
       - name: Setup Rust
         uses: hecrj/setup-rust-action@v1
         with:
