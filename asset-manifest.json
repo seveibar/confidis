@@ -1,25 +1,25 @@
 {
   "files": {
     "main.css": "/confidis/static/css/main.bce2eb67.chunk.css",
-    "main.js": "/confidis/static/js/main.a57a14c9.chunk.js",
-    "main.js.map": "/confidis/static/js/main.a57a14c9.chunk.js.map",
-    "runtime-main.js": "/confidis/static/js/runtime-main.8472c448.js",
-    "runtime-main.js.map": "/confidis/static/js/runtime-main.8472c448.js.map",
-    "static/js/2.afefd3a4.chunk.js": "/confidis/static/js/2.afefd3a4.chunk.js",
-    "static/js/2.afefd3a4.chunk.js.map": "/confidis/static/js/2.afefd3a4.chunk.js.map",
-    "static/js/3.e6992387.chunk.js": "/confidis/static/js/3.e6992387.chunk.js",
-    "5a34b24e1b0c2985e4ae.module.wasm": "/confidis/5a34b24e1b0c2985e4ae.module.wasm",
-    "static/js/3.e6992387.chunk.js.map": "/confidis/static/js/3.e6992387.chunk.js.map",
+    "main.js": "/confidis/static/js/main.27f72991.chunk.js",
+    "main.js.map": "/confidis/static/js/main.27f72991.chunk.js.map",
+    "runtime-main.js": "/confidis/static/js/runtime-main.0feccb64.js",
+    "runtime-main.js.map": "/confidis/static/js/runtime-main.0feccb64.js.map",
+    "static/js/2.79541329.chunk.js": "/confidis/static/js/2.79541329.chunk.js",
+    "static/js/2.79541329.chunk.js.map": "/confidis/static/js/2.79541329.chunk.js.map",
+    "static/js/3.a6a42bed.chunk.js": "/confidis/static/js/3.a6a42bed.chunk.js",
+    "06df83c6f7010c7c6a5f.module.wasm": "/confidis/06df83c6f7010c7c6a5f.module.wasm",
+    "static/js/3.a6a42bed.chunk.js.map": "/confidis/static/js/3.a6a42bed.chunk.js.map",
     "index.html": "/confidis/index.html",
-    "precache-manifest.84c6eb764e00225389cff64f89110c68.js": "/confidis/precache-manifest.84c6eb764e00225389cff64f89110c68.js",
+    "precache-manifest.4dd5a287068d54c7a095579ee2d165a4.js": "/confidis/precache-manifest.4dd5a287068d54c7a095579ee2d165a4.js",
     "service-worker.js": "/confidis/service-worker.js",
     "static/css/main.bce2eb67.chunk.css.map": "/confidis/static/css/main.bce2eb67.chunk.css.map",
-    "static/js/2.afefd3a4.chunk.js.LICENSE.txt": "/confidis/static/js/2.afefd3a4.chunk.js.LICENSE.txt"
+    "static/js/2.79541329.chunk.js.LICENSE.txt": "/confidis/static/js/2.79541329.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.8472c448.js",
-    "static/js/2.afefd3a4.chunk.js",
+    "static/js/runtime-main.0feccb64.js",
+    "static/js/2.79541329.chunk.js",
     "static/css/main.bce2eb67.chunk.css",
-    "static/js/main.a57a14c9.chunk.js"
+    "static/js/main.27f72991.chunk.js"
   ]
 }
